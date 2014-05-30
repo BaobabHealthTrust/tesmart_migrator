@@ -546,8 +546,8 @@ def create_art_visit(record,patient,bart_patient)
   new_art_visit.arv_regimen = record.OfThoseAlive if !record.OfThoseAlive.blank?
   new_art_visit.number_of_condoms_given = record.Condom
   new_art_visit.depo_provera_given = "Yes" if record.Depo == "Y"
-  new_art_visit.continue_treatment_at_clinic = "Yes" if record.OutcomeStatus = "A"
-  new_art_visit.continue_art = "Yes" if record.OutcomeStatus = "A"
+  new_art_visit.continue_treatment_at_clinic = "Yes" if record.OutcomeStatus =="A"
+  new_art_visit.continue_art = "Yes" if record.OutcomeStatus == "A"
   new_art_visit.voided = 0
   new_art_visit.encounter_datetime = record.ClinicDay
   new_art_visit.date_created = record.cdate
