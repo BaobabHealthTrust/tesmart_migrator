@@ -1,0 +1,36 @@
+
+development:
+  adapter: mysql
+  database: bart1_intermediate_bare_bones
+  username: root
+  password: password
+  host: localhost
+  pool: 5
+  timeout: 5000
+
+production:
+  adapter: mysql
+  database: migration
+  username: root
+  password: password
+  host: localhost
+  pool: 5
+  timeout: 5000
+
+testmart:
+  adapter: mysql
+  database: source_database
+  username: root
+  password: password
+  host: localhost
+  pool: 5
+  timeout: 5000
+
+bart2:
+  adapter: mysql
+  database: destination_openmrs1.7
+  username: root
+  password: password
+  host: localhost
+  pool: 5
+  timeout: 5000
