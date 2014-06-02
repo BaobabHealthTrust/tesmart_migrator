@@ -1,0 +1,9 @@
+tmp/
+*.yml
+*.sql
+*.txt
+*~
+*.log
+
+
+
