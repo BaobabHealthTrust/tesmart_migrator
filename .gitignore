@@ -5,6 +5,6 @@ tmp/
 *.txt
 *~
 *.log
-
+*.lock
 
 
