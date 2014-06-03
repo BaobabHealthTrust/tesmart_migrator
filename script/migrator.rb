@@ -45,18 +45,18 @@ def create_patient(t_patient)
    new_patient.dead = 1
   end 
   if t_patient.TA.blank? 
-	t_patient.TA = "0xx"
+	t_patient.TA = "Unknown"
   end  
   new_patient.traditional_authority = @traditionalauthoritydata[t_patient.TA]
   #Add more  
   if t_patient.Village.blank?
-	t_patient.Village = "0xx"
+	t_patient.Village = "Unknown"
   end
   new_patient.current_address = @villagedata[t_patient.Village]
   new_patient.cellphone_number = t_patient.CellPhone
   new_patient.occupation = @occupationdata[t_patient.Occupation]
   new_patient.guardian_id = ''
-  new_patient.art_number = "#{@site_code}" + "-" + "ARV" + "-" + "#{per.arv_no}"
+  new_patient.art_number = "#{@site_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
   new_patient.voided = 0
   new_patient.creator = 1
   new_patient.date_created = t_patient.cdate
@@ -67,23 +67,37 @@ def create_patient(t_patient)
 
   $person_id +=1
 
-  #create_guardian(t_patient, new_patient.id)
+  create_guardian(t_patient, new_patient.id)
 
 end
 
 def create_guardian(t_patient, patient_id)
+
+  guardian_names = t_patient.GuardianName.split(" ")
+  gender = get_relation_gender(t_patient.Sex, t_patient.guardianrelation)
   new_guardian_patient = Patient.new
   new_guardian_patient.patient_id = $person_id
-  #Add more attributes
+  new_guardian_patient.given_name = guardian_names.first
+  new_guardian_patient.family_name = guardian_names.last
+  new_guardian_patient.gender = gender
+  new_guardian_patient.voided = 0
+  new_guardian_patient.creator = 1
+  new_guardian_patient.date_created = t_patient.cdate
   new_guardian_patient.save
-  
-  new_gaurdian = Guardian.new
+  $person_id +=1
+
+  new_guardian = Guardian.new
   new_guardian.patient_id = patient_id
   new_guardian.relative_id = new_guardian_patient.patient_id
   new_guardian.relationship = get_relationship(t_patient)
-  #Add more attributes
+  new_guardian.name = guardian_names.first
+  new_guardian.family_name = guardian_names.last
+  new_guardian.gender = gender
+  new_guardian.creator = 1
+  new_guardian.voided = 0
+  new_guardian.date_created = t_patient.cdate
   new_guardian.save
-  $person_id +=1
+
 end
 
 def create_visit_encounter
@@ -135,22 +149,46 @@ end
 
 def get_relationship(per)
   if per.guardianrelation == 'SPO'
-    relationship = 12
+    relationship = "Spouse/Partner"
   elsif per.guardianrelation == 'SIS'
-    relationship = 2
+    relationship = "Sibling"
   elsif per.guardianrelation == 'BRO'
-    relationship = 2
+    relationship = "Sibling"
   elsif per.guardianrelation == 'MTH'
-    relationship = 3
+    relationship = "Parent"
   elsif per.guardianrelation == 'FTH'
-    relationship = 3
+    relationship = "Parent"
   elsif per.guardianrelation == 'OTH'
-    relationship = 13
+    relationship = "Other"
   else
-    relationship = 13
+    relationship = "Other"
   end
 
   return relationship
+end
+
+def get_relation_gender(patient_gender, relationship)
+
+  case relationship
+    when 'SPO'
+      if patient_gender == 1
+        gender = "F"
+      else
+        gender = "M"
+      end
+    when 'MTH'
+        gender = "F"
+    when 'FTH'
+      gender = "M"
+    when 'SIS'
+      gender = "F"
+    when 'BRO'
+      gender = "M"
+    else
+      gender = "U"
+  end
+
+ return gender
 end
 
 start
