@@ -59,9 +59,20 @@ end
 
 def create_hiv_reception_encounter
 
+  new_recp_encounter = HivReceptionEncounter.new
+  new_recp_encounter.guardian = Patient.gaurdian
+  new_recp_encounter.save
+
 end
 
 def create_vitals_encounter
+
+  new_vitals_enc = VitalsEncounter.new
+  new_vitals_enc.patient_id = patient_id
+  new_vitals_enc.weight = weight
+  new_vitals_enc.height = height
+  new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
+  new_vitals_enc.save
 
 end
 
