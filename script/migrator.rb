@@ -80,6 +80,7 @@ def create_guardian(t_patient, patient_id)
   new_guardian_patient.given_name = guardian_names.first
   new_guardian_patient.family_name = guardian_names.last
   new_guardian_patient.gender = gender
+  new_guardian_patient.dob = '0000-00-00'
   new_guardian_patient.voided = 0
   new_guardian_patient.creator = 1
   new_guardian_patient.date_created = t_patient.cdate
@@ -98,6 +99,9 @@ def create_guardian(t_patient, patient_id)
   new_guardian.date_created = t_patient.cdate
   new_guardian.save
 
+  patient = Patient.find(patient_id)
+  patient.guardian_id = new_guardian_patient.patient_id
+  patient.save
 end
 
 def create_visit_encounter
@@ -105,15 +109,17 @@ def create_visit_encounter
 end
 
 def create_outcome
+  #by justin
 
 end
 
 def create_first_visit_encounter
-
+  #by timothy
 end
 
 def create_hiv_staging_encounter
 
+  #by temwa
 end
 
 def create_hiv_reception_encounter
@@ -136,15 +142,16 @@ def create_vitals_encounter
 end
 
 def create_give_drugs_encounter
-
+  #by justin
 end
 
 def create_outcome_encounter
 
+  #by justin
 end
 
 def create_art_visit
-
+  #by timothy
 end
 
 def get_relationship(per)
@@ -171,7 +178,7 @@ def get_relation_gender(patient_gender, relationship)
 
   case relationship
     when 'SPO'
-      if patient_gender == 1
+      if patient_gender == '1'
         gender = "F"
       else
         gender = "M"
