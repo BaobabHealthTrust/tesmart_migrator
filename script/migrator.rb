@@ -1,15 +1,44 @@
+$person_id = 2
 def start
 
+  patients = TesmartPatient.all
 
+  count = patients.length
+  puts "Patients to be migrated #{count}"
+  (patients || []).each do |patient|
+    next if patient.id == 0
+    puts "Working on patient id #{patient.id}, #{count} patients left"
+    create_patient(patient)
+    count -= 1
+  end
 
 end
 
-def create_patient
+def create_patient(t_patient)
+  new_patient = Patient.new
+  new_patient.patient_id = $person_id
+  #Add more attributes
+  new.save
+
+  $person_id +=1
+
+  create_guardian(t_patient, new_patient.id)
 
 end
 
-def create_guardian
+def create_guardian(t_patient, patient_id)
+  new_guardian_patient = Patient.new
+  new_guardian_patient.patient_id = $person_id
+  #Add more attributes
+  new_guardian_patient.save
 
+  new_gaurdian = Guardian.new
+  new_guardian.patient_id = patient_id
+  new_guardian.relative_id = new_guardian_patient.patient_id
+  new_guardian.relationship = get_relationship(t_patient)
+  #Add more attributes
+  new_guardian.save
+  $person_id +=1
 end
 
 def create_visit_encounter
@@ -48,5 +77,24 @@ def create_art_visit
 
 end
 
+def get_relationship(per)
+  if per.guardianrelation == 'SPO'
+    relationship = 12
+  elsif per.guardianrelation == 'SIS'
+    relationship = 2
+  elsif per.guardianrelation == 'BRO'
+    relationship = 2
+  elsif per.guardianrelation == 'MTH'
+    relationship = 3
+  elsif per.guardianrelation == 'FTH'
+    relationship = 3
+  elsif per.guardianrelation == 'OTH'
+    relationship = 13
+  else
+    relationship = 13
+  end
+
+  return relationship
+end
 
 start
