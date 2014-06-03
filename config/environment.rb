@@ -39,3 +39,13 @@ Rails::Initializer.run do |config|
   # config.i18n.load_path += Dir[Rails.root.join('my', 'locales', '*.{rb,yml}')]
   # config.i18n.default_locale = :de
 end
+
+tesmart = YAML.load(File.open(File.join(RAILS_ROOT, "config/database.yml"), "r"))['testmart']
+TesmartHospital.establish_connection(tesmart)
+TesmartLookup.establish_connection(tesmart)
+TesmartOpdReg.establish_connection(tesmart)
+TesmartOpdTran.establish_connection(tesmart)
+TesmartPatient.establish_connection(tesmart)
+TesmartSite.establish_connection(tesmart)
+TesmartStaging.establish_connection(tesmart)
+
