@@ -1,5 +1,5 @@
 $person_id = 2
-@site = 'RU'
+$hospital_id = 214
 def start
   patients = TesmartPatient.all
   count = patients.length
@@ -132,7 +132,7 @@ def process_patient_records(patient, patient_id)
   (visit_records || []).each do |record|
     height = get_patient_height(record)
     create_vitals_encounter(record.Weight,height, patient_id)
-    
+    create_outcome(record,patient_id)
   end
 
   (dispensation_records || []).each do |disp_record|
@@ -141,11 +141,24 @@ def process_patient_records(patient, patient_id)
 
 end
 
-def create_outcome
+def create_outcome(t_rec, patient_id)
   #by justin
-
+     outcome = OutcomeEncounter.new
+     outcome.old_enc_id = $outcome_encounter
+     outcome.patient_id =  patient_id
+     outcome.state = get_status(t_rec.OutcomeStatus )
+     outcome.outcome_date =  t_rec.ClinicDay
+     if !(t_rec.TransferOutTO.blank?)
+     outcome.transfer_out_location = get_location(t_rec.TransferOutTO)
+     end
+     outcome.location = $hospital_id
+     outcome.voided = 0
+     outcome.encounter_date_time = t_rec.ClinicDay
+     outcome.date_created = t_rec.mdate
+     outcome.creator = 1
+     outcome.save
+     $outcome_encounter += 1
 end
-
 def create_first_visit_encounter
   #by timothy
 end
@@ -296,4 +309,31 @@ def get_patient_height(record)
   #improve method
   return record.Height
 end
-start
+
+def get_status(patient_state)
+	 case  patient_state
+	 when "A"
+          state = "On ART"
+	  when "D"
+	  state = "Died"
+	  when "TO" 
+	  state = "Transfered out  (with a letter)"
+	  when "DF"
+	   state = "On ART"
+	  when "STOP"
+	  state = "Stopped"
+	  else
+	    state = "On ART"	  
+         end 
+   return state
+end	
+
+def get_location(h_code)
+	 locationdata = Hash.new("Unknown")
+        @sites = Location.find(:all)
+        @sites.each do |loc|
+	 locationdata[loc.h_value] = loc.h_name   
+      end
+   hospital_name = locationdata[h_code]
+   return hospital_name
+end	
