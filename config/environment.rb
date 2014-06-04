@@ -48,4 +48,6 @@ TesmartOpdTran.establish_connection(tesmart)
 TesmartPatient.establish_connection(tesmart)
 TesmartSite.establish_connection(tesmart)
 TesmartStaging.establish_connection(tesmart)
+Location.establish_connection(tesmart)
+
 
