@@ -41,7 +41,7 @@ def start
       staging = TesmartStaging.find(:last,:order => "clinicday ASC",
                                     :conditions =>["arv_no = ?", patient.id])
 
-      create_hiv_staging_encounter(staging,patient,patient_id)
+      #create_hiv_staging_encounter(staging,patient,patient_id)
 #      create_first_visit_encounter
       process_patient_records(patient, patient_id)
     end
@@ -137,24 +137,24 @@ def process_patient_records(patient, patient_id)
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
-    height = get_patient_height(record)
-    create_outcome(record,patient_id)
-    create_outcome_encounter(record, patient_id)
-    create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
-    create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
+    #height = get_patient_height(record)
+    create_outcome(record,patient_id,record.cdate)
+    create_outcome_encounter(record, patient_id,record.cdate)
+    #create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
+    #create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
 
   (dispensation_records || []).each do |disp_record|
-    create_give_drugs_encounter
+    #create_give_drugs_encounter
   end
 
 end
 
-def create_outcome
+def create_outcome(t_rec,patient_id,enc_date)
   #by justin
 
      outcome = OutcomeEncounter.new
-     outcome.visit_encounter_id = 
+     outcome.visit_encounter_id =  $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
      outcome.old_enc_id = $encounter_id
      outcome.patient_id =  patient_id
      outcome.state = get_status(t_rec.OutcomeStatus )
@@ -285,7 +285,7 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.old.enc_id = $encounter_id
   new_staging.save
   $encounter_id +=1
-
+=end
 end
 
 def create_hiv_reception_encounter(patient,present,date_created, enc_date)
@@ -337,14 +337,14 @@ def create_give_drugs_encounter
   #by justin
 end
 
-def create_outcome_encounter(t_rec, patient_id)
+def create_outcome_encounter(t_rec, patient_id,enc_date)
   #by justin
   create_outcome_enc = PatientOutcome.new
-  create_outcome_enc.outcome_id = $p_outcome_id
-  create_outcome_enc.patient_id = t_rec.patient_id
+  create_outcome_enc.outcome_id = $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
+  create_outcome_enc.patient_id = patient_id
   create_outcome_enc.outcome_state = get_status(t_rec.OutcomeStatus)
   create_outcome_enc.outcome_date = t_rec.ClinicDay
-   create_outcome_enc.outcome_date.save
+  create_outcome_enc.save
 end
 
 def create_art_visit
@@ -401,7 +401,7 @@ def get_patient_height(record)
     return record.Height.to_i
   else
 
-    last_height = TesmartOpdTran.find(:last, :order => "ClinicDay asc",
+    last_height = TesmartOpdReg.find(:last, :order => "ClinicDay asc",
                         :conditions => ["arv_no = ? AND Height != 0 AND ClinicDay <= ? ", record.arv_no,record.ClinicDay])
     if last_height.blank?
       return TesmartPatient.find( record.arv_no).Height rescue 0
@@ -443,7 +443,7 @@ end
 
 def create_visit_encounter(encounter_date, patient)
   if $visit_encounter_hash["#{patient}#{encounter_date.to_date}"].blank?
-    new_visit_enc = VitalsEncounter.new
+    new_visit_enc = VisitEncounter.new
     new_visit_enc.patient_id = patient
     new_visit_enc.visit_date = encounter_date
     new_visit_enc.save
