@@ -3,26 +3,40 @@ $person_id = 2
 def start
   patients = TesmartPatient.all
   count = patients.length
-  @traditional_authorities =  TesmartLookup.load_traditional_authority
+
+  traditional_authorities =  TesmartLookup.load_traditional_authority
+
   @traditionalauthoritydata = Hash.new("unknown")
-   @traditional_authorities.each do |ta|
+
+  traditional_authorities.each do |ta|
      @traditionalauthoritydata[ta.item_code] = ta.code_desc
-    end
-  @occupation = TesmartLookup.load_occupation_data
+  end
+
+  occupation = TesmartLookup.load_occupation_data
   @occupationdata = Hash.new("Missing")
-  @occupation.each do |occ|
-	@occupationdata[occ.item_code] = occ.code_desc
-end
- @villages = TesmartLookup.load_villages
- @villagedata = Hash.new("unknown")
- @villages.each do |vil|
-            @villagedata[vil.item_code] = vil.code_desc
-end
+
+  occupation.each do |occ|
+	  @occupationdata[occ.item_code] = occ.code_desc
+  end
+
+  villages = TesmartLookup.load_villages
+
+  @villagedata = Hash.new("unknown")
+
+  villages.each do |vil|
+     @villagedata[vil.item_code] = vil.code_desc
+  end
+
   puts "Patients to be migrated #{count}"
+
   (patients || []).each do |patient|
     next if patient.id == 0
     puts "Working on patient id #{patient.id}, #{count} patients left"
-    create_patient(patient)
+    if create_patient(patient)
+      create_hiv_staging_encounter
+      create_first_visit_encounter
+      process_patient_records(patient)
+    end
     count -= 1
   end
 
@@ -63,12 +77,14 @@ def create_patient(t_patient)
   new_patient.home_phone_number = t_patient.HomePhone
   new_patient.dob_estimated = 0
   new_patient.landmark = t_patient.Address
-  new_patient.save
 
-  $person_id +=1
-
-  create_guardian(t_patient, new_patient.id)
-
+  if new_patient.save
+    $person_id +=1
+    create_guardian(t_patient, new_patient.id)
+    return true
+  else
+    return false
+  end
 end
 
 def create_guardian(t_patient, patient_id)
@@ -104,7 +120,19 @@ def create_guardian(t_patient, patient_id)
   patient.save
 end
 
-def create_visit_encounter
+
+def process_patient_records(patient)
+
+  visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
+  dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
+  (visit_records || []).each do |record|
+    create_vitals_encounter(record, patient)
+    
+  end
+
+  (dispensation_records || []).each do |disp_record|
+    create_give_drugs_encounter
+  end
 
 end
 
