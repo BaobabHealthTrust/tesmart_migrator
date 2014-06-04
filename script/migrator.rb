@@ -131,12 +131,15 @@ end
 
 
 def process_patient_records(patient, patient_id)
-
+  $outcome_encounter = 1
+  $p_outcome_id = 1
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
     height = get_patient_height(record)
+    create_outcome(record,patient_id)
+    create_outcome_encounter(record, patient_id)
     create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
@@ -149,6 +152,23 @@ end
 
 def create_outcome
   #by justin
+
+     outcome = OutcomeEncounter.new
+     outcome.visit_encounter_id = 
+     outcome.old_enc_id = $encounter_id
+     outcome.patient_id =  patient_id
+     outcome.state = get_status(t_rec.OutcomeStatus )
+     outcome.outcome_date =  t_rec.ClinicDay
+     if !(t_rec.TransferOutTo.blank?)
+     outcome.transfer_out_location = get_location(t_rec.TransferOutTo)
+     end
+     outcome.location = $hospital_id
+     outcome.voided = 0
+     outcome.encounter_datetime = t_rec.ClinicDay
+     outcome.date_created = t_rec.mdate
+     outcome.creator = 1
+     outcome.save
+     $encounter_id += 1
 
 end
 
@@ -202,7 +222,7 @@ end
 
 def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   #by temwa
-  new_staging = HivStagingEncounter.new
+=begin new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
   new_staging.patient_pregnant = t_stage.a3
   new_staging.patient_breast_feeding = t_stage.a4
@@ -218,7 +238,7 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.lineal_gingival_erythema = t_stage.b57
   new_staging.herpes_zoster = t_stage.b5867
   new_staging.respiratory_tract_infection_recurrent = t_stage.b5968
-  #new_staging.unspecified_stage2_condition = Null
+  #new_staging.unspecified_stage2_condition= Null
   new_staging.angular_chelitis = t_stage.b2
   new_staging.papular_prutic_eruptions = t_stage.b6169
   new_staging.hepatosplenomegaly_unexplained = t_stage.b51
@@ -266,6 +286,7 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.visit_encounter_id = create_visit_encounter(t_stage.clinicday, patient_id)
   new_staging.save
   $encounter_id +=1
+
 end
 
 def create_hiv_reception_encounter(patient,present,date_created, enc_date)
@@ -309,17 +330,22 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
   new_vitals_enc.encounter_datetime = enc_date
   new_vitals_enc.creator = 1
   new_vitals_enc.save
-
   $encounter_id += 1
+
 end
 
 def create_give_drugs_encounter
   #by justin
 end
 
-def create_outcome_encounter
-
+def create_outcome_encounter(t_rec, patient_id)
   #by justin
+  create_outcome_enc = PatientOutcome.new
+  create_outcome_enc.outcome_id = $p_outcome_id
+  create_outcome_enc.patient_id = t_rec.patient_id
+  create_outcome_enc.outcome_state = get_status(t_rec.OutcomeStatus)
+  create_outcome_enc.outcome_date = t_rec.ClinicDay
+   create_outcome_enc.outcome_date.save
 end
 
 def create_art_visit
@@ -366,7 +392,6 @@ def get_relation_gender(patient_gender, relationship)
     else
       gender = "U"
   end
-
  return gender
 end
 
@@ -388,6 +413,34 @@ def get_patient_height(record)
   end
 
 end
+
+def get_status(patient_state)
+	 case  patient_state
+	 when "A"
+          state = "On ART"
+	  when "D"
+	  state = "Died"
+	  when "TO" 
+	  state = "Transfer Out(With Transfer Note)"
+	  when "DF"
+	   state = "On ART"
+	  when "STOP"
+	  state = "ART Stop"
+	  else
+	    state = "On ART"	  
+         end 
+   return state
+end	
+
+def get_location(h_code)
+	 locationdata = Hash.new("Unknown")
+        @sites = TesmartSite.find(:all)
+        @sites.each do |loc|
+	 locationdata[loc.h_value] = loc.h_name   
+      end
+   hospital_name = locationdata[h_code]
+   return hospital_name
+end	
 
 def create_visit_encounter(encounter_date, patient)
   if $visit_encounter_hash["#{patient}#{encounter_date.to_date}"].blank?
