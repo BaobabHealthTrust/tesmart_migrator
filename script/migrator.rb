@@ -32,10 +32,14 @@ def start
   (patients || []).each do |patient|
     next if patient.id == 0
     puts "Working on patient id #{patient.id}, #{count} patients left"
-    if create_patient(patient)
-      create_hiv_staging_encounter
+    patient_id = create_patient(patient)
+    if !patient_id.blank?
+      staging = TesmartStaging.find(:last,:order => "clinicday ASC",
+                                    :conditions =>["arv_no = ?", patient.id])
+
+      create_hiv_staging_encounter(staging,patient,patient_id)
       create_first_visit_encounter
-      process_patient_records(patient)
+      process_patient_records(patient, patient_id)
     end
     count -= 1
   end
@@ -81,7 +85,7 @@ def create_patient(t_patient)
   if new_patient.save
     $person_id +=1
     create_guardian(t_patient, new_patient.id)
-    return true
+    return new_patient.id
   else
     return false
   end
@@ -121,17 +125,18 @@ def create_guardian(t_patient, patient_id)
 end
 
 
-def process_patient_records(patient)
+def process_patient_records(patient, patient_id)
 
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   (visit_records || []).each do |record|
-    create_vitals_encounter(record, patient)
+    height = get_patient_height(record)
+    create_vitals_encounter(record.Weight,height, patient_id)
     
   end
 
   (dispensation_records || []).each do |disp_record|
-    create_give_drugs_encounter
+    create_give_drugs_encounter(disp_record, patient_id)
   end
 
 end
@@ -219,7 +224,7 @@ def create_hiv_reception_encounter
 
 end
 
-def create_vitals_encounter
+def create_vitals_encounter(weight, height, patient_id)
 
   new_vitals_enc = VitalsEncounter.new
   new_vitals_enc.patient_id = patient_id
@@ -287,4 +292,8 @@ def get_relation_gender(patient_gender, relationship)
  return gender
 end
 
+def get_patient_height(record)
+  #improve method
+  return record.Height
+end
 start
