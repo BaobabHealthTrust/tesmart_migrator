@@ -1,6 +1,8 @@
 $person_id = 2
 $encounter_id = 1
 $visit_encounter_hash = {}
+$hospital_id = 214
+
 def start
   patients = TesmartPatient.all
   count = patients.length
@@ -40,7 +42,7 @@ def start
                                     :conditions =>["arv_no = ?", patient.id])
 
       create_hiv_staging_encounter(staging,patient,patient_id)
-      create_first_visit_encounter
+#      create_first_visit_encounter
       process_patient_records(patient, patient_id)
     end
     count -= 1
@@ -298,6 +300,7 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
     new_vitals_enc.height = height
     new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
   end
+  new_vitals_enc.visit_encounter = $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
   new_vitals_enc.old_enc_id = $encounter_id
   new_vitals_enc.voided = 0
   new_vitals_enc.date_created = cdate
