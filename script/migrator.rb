@@ -280,6 +280,7 @@ def create_hiv_reception_encounter(patient,present,date_created, enc_date)
   else
     new_recp_encounter.patient_present = "Yes"
   end
+  new_recp_encounter.visit_encounter_id = create_visit_encounter(enc_date,patient.id)
   new_recp_encounter.patient_id = patient.id
   new_recp_encounter.old_enc_id = $encounter_id
   new_recp_encounter.creator = 1
@@ -300,7 +301,7 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
     new_vitals_enc.height = height
     new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
   end
-  new_vitals_enc.visit_encounter = $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
+  new_vitals_enc.visit_encounter_id = $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
   new_vitals_enc.old_enc_id = $encounter_id
   new_vitals_enc.voided = 0
   new_vitals_enc.date_created = cdate
