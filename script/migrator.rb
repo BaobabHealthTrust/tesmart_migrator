@@ -117,9 +117,70 @@ def create_first_visit_encounter
   #by timothy
 end
 
-def create_hiv_staging_encounter
-
+def create_hiv_staging_encounter(t_stage, t_patient)
   #by temwa
+  new_staging = HivStagingEncounter.new
+  new_staging.patient_id = patient_id
+  new_staging.patient_pregnant = t_stage.a3
+  new_staging.patient_breast_feeding = t_stage.a4
+  new_staging.cd4_count = t_patient.initCD4Count
+  new_staging.date_of_cd4_count = t_patient.initCD4Date #check!!!
+  new_staging.asymptomatic = t_stage.a1
+  new_staging.persistent_generalized_lymphadenopathy = t_stage.a2
+ # new_staging.unspecified_stage_1_cond = Null
+  new_staging.molluscum_contagiosum = t_stage.b54
+  new_staging.wart_virus_infection_extensive = t_stage.b53
+  new_staging.oral_ulcerations_recurrent = t_stage.b55
+  new_staging.parotid_enlargement_persistent_unexplained = t_stage.b56
+  new_staging.lineal_gingival_erythema = t_stage.b57
+  new_staging.herpes_zoster = t_stage.b5867
+  new_staging.respiratory_tract_infection_recurrent = t_stage.b5968
+  #new_staging.unspecified_stage2_condition = Null
+  new_staging.angular_chelitis = t_stage.b2
+  new_staging.papular_prutic_eruptions = t_stage.b6169
+  new_staging.hepatosplenomegaly_unexplained = t_stage.b51
+  new_staging.oral_hairy_leukoplakia =t_stage.c2
+  new_staging.severe_weight_loss = t_stage.c3
+  new_staging.fever_persistent_unexplained = t_stage.c5
+  new_staging.pulmonary_tubercuosis = t_stage.c6
+  new_staging.pulmonary_tuberculosis_last_2_years = t_stage.c7
+  new_staging.severe_bacterial_infection = t_stage.c8
+  new_staging.bacterial_pnuemonia = t_stage.c53
+  new_staging.symptomatic_lymphoid_interstitial_pnuemonitis = t_stage.c54
+  new_staging.chronic_hiv_assoc_lung_disease = t_stage.c55
+  #new_staging.unspecified_stage3_conditions = Null
+  new_staging.aneamia = t_stage.c10_1
+  new_staging.neutropaenia = t_stage.c10_2
+  new_staging.thrombocytopaenia_chronic = t_stage.c10_3
+  new_staging.diarhoea = t_stage.c4
+  new_staging.oral_candidiasis = t_stage.c1
+  new_staging.acute_necrotizing_ulcerative_gingivitis = t_stage.c9
+  new_staging.lymph_node_tuberculosis = t_stage.c52
+  new_staging.toxoplasmosis_of_brain = t_stage.d3
+  new_staging.cryptococcal_meningitis = t_stage.d6
+  new_staging.progressive_multifocal_leukoencephalopathy = t_stage,d9
+  new_staging.disseminated_mycosis = t_stage.d10
+  new_staging.candidiasis_of_oesophagus = t_stage.d11
+  new_staging.extrapulmonary_tuberculosis = t_stage.d14
+  new_staging.cerebral_non_hodgkin_lymphoma = t_stage.d15
+  new_staging.kaposis = t_stage.d16
+  new_staging.hiv_encephalopathy = t_stage.d17
+  new_staging.bacterial_infections_severe_recurrent = t_stage.d5
+  #new_staging.unspecified_stage_4_condition = Null
+  new_staging.pnuemocystis_pnuemonia = t_stage.d2
+  new_staging.disseminated_non_tuberculosis_mycobacterial_infection = t_stage.d12
+  new_staging.cryptosporidiosis = t_stage.d4
+  new_staging.isosporiasis = t_stage.d4_1
+  new_staging.symptomatic_hiv_associated_nephropathy = t_stage.dh1
+  new_staging.chronic_herpes_simplex_infection = t_stage.d8
+  new_staging.cutomegalovirus_infection = t_stage.d7
+  new_staging.toxoplasomis_of_the_brain_1month  = t_stage.d3
+  new_staging.recto_varginal_fistula = t_stage.dn2
+  new_staging.hiv_wasting_syndrome = t_stage.d1
+  new_staging.who_stage = t_stage.staging
+  new_staging.date_created  = t_stage.cdate
+
+  new_staging.save	
 end
 
 def create_hiv_reception_encounter
