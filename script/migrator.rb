@@ -145,7 +145,7 @@ def create_first_visit_encounter
   #by timothy
 end
 
-def create_hiv_staging_encounter(t_stage, t_patient)
+def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   #by temwa
   new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
