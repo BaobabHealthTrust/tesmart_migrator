@@ -74,7 +74,7 @@ def create_patient(t_patient)
   new_patient.cellphone_number = t_patient.CellPhone
   new_patient.occupation = @occupationdata[t_patient.Occupation]
   new_patient.guardian_id = ''
-  new_patient.art_number = "#{@site_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
+  new_patient.art_number = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
   new_patient.voided = 0
   new_patient.creator = 1
   new_patient.date_created = t_patient.cdate
@@ -126,13 +126,15 @@ end
 
 
 def process_patient_records(patient, patient_id)
-
+  $outcome_encounter = 1
+  $p_outcome_id = 1
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   (visit_records || []).each do |record|
     height = get_patient_height(record)
     create_vitals_encounter(record.Weight,height, patient_id)
     create_outcome(record,patient_id)
+    create_outcome_encounter(record, patient_id)
   end
 
   (dispensation_records || []).each do |disp_record|
@@ -144,16 +146,17 @@ end
 def create_outcome(t_rec, patient_id)
   #by justin
      outcome = OutcomeEncounter.new
+     outcome.visit_encounter_id = 
      outcome.old_enc_id = $outcome_encounter
      outcome.patient_id =  patient_id
      outcome.state = get_status(t_rec.OutcomeStatus )
      outcome.outcome_date =  t_rec.ClinicDay
-     if !(t_rec.TransferOutTO.blank?)
-     outcome.transfer_out_location = get_location(t_rec.TransferOutTO)
+     if !(t_rec.TransferOutTo.blank?)
+     outcome.transfer_out_location = get_location(t_rec.TransferOutTo)
      end
      outcome.location = $hospital_id
      outcome.voided = 0
-     outcome.encounter_date_time = t_rec.ClinicDay
+     outcome.encounter_datetime = t_rec.ClinicDay
      outcome.date_created = t_rec.mdate
      outcome.creator = 1
      outcome.save
@@ -165,7 +168,7 @@ end
 
 def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   #by temwa
-  new_staging = HivStagingEncounter.new
+=begin new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
   new_staging.patient_pregnant = t_stage.a3
   new_staging.patient_breast_feeding = t_stage.a4
@@ -181,7 +184,7 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.lineal_gingival_erythema = t_stage.b57
   new_staging.herpes_zoster = t_stage.b5867
   new_staging.respiratory_tract_infection_recurrent = t_stage.b5968
-  #new_staging.unspecified_stage2_condition = Null
+  #new_staging.unspecified_stage2_condition= Null
   new_staging.angular_chelitis = t_stage.b2
   new_staging.papular_prutic_eruptions = t_stage.b6169
   new_staging.hepatosplenomegaly_unexplained = t_stage.b51
@@ -226,7 +229,8 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.who_stage = t_stage.staging
   new_staging.date_created  = t_stage.cdate
 
-  new_staging.save	
+  #new_staging.save
+=end
 end
 
 def create_hiv_reception_encounter
@@ -239,22 +243,27 @@ end
 
 def create_vitals_encounter(weight, height, patient_id)
 
-  new_vitals_enc = VitalsEncounter.new
+=begin new_vitals_enc = VitalsEncounter.new
   new_vitals_enc.patient_id = patient_id
   new_vitals_enc.weight = weight
   new_vitals_enc.height = height
   new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
   new_vitals_enc.save
-
+=end
 end
 
 def create_give_drugs_encounter
   #by justin
 end
 
-def create_outcome_encounter
-
+def create_outcome_encounter(t_rec, patient_id)
   #by justin
+  create_outcome_enc = PatientOutcome.new
+  create_outcome_enc.outcome_id = $p_outcome_id
+  create_outcome_enc.patient_id = t_rec.patient_id
+  create_outcome_enc.outcome_state = get_status(t_rec.OutcomeStatus)
+  create_outcome_enc.outcome_date = t_rec.ClinicDay
+   create_outcome_enc.outcome_date.save
 end
 
 def create_art_visit
@@ -301,7 +310,6 @@ def get_relation_gender(patient_gender, relationship)
     else
       gender = "U"
   end
-
  return gender
 end
 
@@ -317,11 +325,11 @@ def get_status(patient_state)
 	  when "D"
 	  state = "Died"
 	  when "TO" 
-	  state = "Transfered out  (with a letter)"
+	  state = "Transfer Out(With Transfer Note)"
 	  when "DF"
 	   state = "On ART"
 	  when "STOP"
-	  state = "Stopped"
+	  state = "ART Stop"
 	  else
 	    state = "On ART"	  
          end 
@@ -330,10 +338,11 @@ end
 
 def get_location(h_code)
 	 locationdata = Hash.new("Unknown")
-        @sites = Location.find(:all)
+        @sites = TesmartSite.find(:all)
         @sites.each do |loc|
 	 locationdata[loc.h_value] = loc.h_name   
       end
    hospital_name = locationdata[h_code]
    return hospital_name
 end	
+start
