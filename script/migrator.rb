@@ -1,5 +1,8 @@
 $person_id = 2
+$encounter_id = 1
+$visit_encounter_hash = {}
 $hospital_id = 214
+
 def start
   patients = TesmartPatient.all
   count = patients.length
@@ -33,15 +36,17 @@ def start
     next if patient.id == 0
     puts "Working on patient id #{patient.id}, #{count} patients left"
     patient_id = create_patient(patient)
+
     if !patient_id.blank?
       staging = TesmartStaging.find(:last,:order => "clinicday ASC",
                                     :conditions =>["arv_no = ?", patient.id])
 
       create_hiv_staging_encounter(staging,patient,patient_id)
-      create_first_visit_encounter
+#      create_first_visit_encounter
       process_patient_records(patient, patient_id)
     end
     count -= 1
+
   end
 
 end
@@ -74,7 +79,7 @@ def create_patient(t_patient)
   new_patient.cellphone_number = t_patient.CellPhone
   new_patient.occupation = @occupationdata[t_patient.Occupation]
   new_patient.guardian_id = ''
-  new_patient.art_number = "#{@site_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
+  new_patient.art_number = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
   new_patient.voided = 0
   new_patient.creator = 1
   new_patient.date_created = t_patient.cdate
@@ -126,46 +131,98 @@ end
 
 
 def process_patient_records(patient, patient_id)
-
+  $outcome_encounter = 1
+  $p_outcome_id = 1
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
+  bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
     height = get_patient_height(record)
-    create_vitals_encounter(record.Weight,height, patient_id)
     create_outcome(record,patient_id)
+    create_outcome_encounter(record, patient_id)
+    create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
+    create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
 
   (dispensation_records || []).each do |disp_record|
-    create_give_drugs_encounter(disp_record, patient_id)
+    create_give_drugs_encounter
   end
 
 end
 
-def create_outcome(t_rec, patient_id)
+def create_outcome
   #by justin
+
      outcome = OutcomeEncounter.new
-     outcome.old_enc_id = $outcome_encounter
+     outcome.visit_encounter_id = 
+     outcome.old_enc_id = $encounter_id
      outcome.patient_id =  patient_id
      outcome.state = get_status(t_rec.OutcomeStatus )
      outcome.outcome_date =  t_rec.ClinicDay
-     if !(t_rec.TransferOutTO.blank?)
-     outcome.transfer_out_location = get_location(t_rec.TransferOutTO)
+     if !(t_rec.TransferOutTo.blank?)
+     outcome.transfer_out_location = get_location(t_rec.TransferOutTo)
      end
      outcome.location = $hospital_id
      outcome.voided = 0
-     outcome.encounter_date_time = t_rec.ClinicDay
+     outcome.encounter_datetime = t_rec.ClinicDay
      outcome.date_created = t_rec.mdate
      outcome.creator = 1
      outcome.save
-     $outcome_encounter += 1
+     $encounter_id += 1
+
 end
-def create_first_visit_encounter
-  #by timothy
+
+def create_first_visit_encounter(t_patient, patient_id,record )
+
+  new_first_visit_enc = FirstVisitEncounter.new
+
+  # new_first_visit_enc.agrees_to_follow_up
+  new_first_visit_enc.date_of_hiv_pos_test = t_patient.HIV_Positive_Date
+  if record.HIV_Positive_Place.blank?
+    new_first_visit_enc.location_of_hiv_pos_test = record.HIV_Positive_Place_text.blank? ? "Unknown" : record.HIV_Positive_Place_text
+  else
+    new_first_visit_enc.location_of_hiv_pos_test = TesmartLookup.find_by_item_code(record.HIV_Positive_Place).code_desc rescue "Unknown"
+  end
+
+	new_first_visit_enc.arv_number_at_that_site = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
+=begin
+  new_first_visit_enc.location_of_art_initiation =
+	# taken_arvs_in_last_two_months
+  # `taken_arvs_in_last_two_weeks`varchar(255),
+
+
+
+	`date_of_art_initiation` date,
+	`ever_registered_at_art` varchar(25),
+	`ever_received_arv` varchar(25),
+=end
+
+  if t_patient.TransferIn == "TI"
+    new_first_visit_enc.has_transfer_letter = "Yes"
+    new_first_visit_enc.site_transferred_from =site_transferred_from
+
+  elsif t_patient.TransferIn == "RI"
+
+  end
+
+	new_first_visit_enc.last_arv_regimen = t_patient.Last_arvDrug
+	new_first_visit_enc.date_last_arv_taken =  t_patient.Last_arvDate
+	new_first_visit_enc.weight = t_patient.Weight
+	new_first_visit_enc.height = t_patient.Height
+	new_first_visit_enc.bmi =
+  new_first_visit_enc.patient_id = patient_id
+  new_first_visit_enc.old_enc_id = $encounter_id
+  new_first_visit_enc.voided = 0
+  new_first_visit_enc.date_created = cdate
+  new_first_visit_enc.encounter_datetime = enc_date
+  new_first_visit_enc.creator = 1
+  new_first_visit_enc.save
+  $encounter_id += 1
 end
 
 def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   #by temwa
-  new_staging = HivStagingEncounter.new
+=begin new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
 #from patiet table in TESMART
   new_staging.cd4_count = t_patient.initCD4Count
@@ -187,6 +244,10 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.lineal_gingival_erythema = t_stage.b57
   new_staging.herpes_zoster = t_stage.b5867
   new_staging.respiratory_tract_infection_recurrent = t_stage.b5968
+<<<<<<< HEAD
+=======
+  #new_staging.unspecified_stage2_condition= Null
+>>>>>>> 936d5672540f34edff28fceec8fdda0dd46182a1
   new_staging.angular_chelitis = t_stage.b2
   new_staging.papular_prutic_eruptions = t_stage.b6169
   new_staging.hepatosplenomegaly_unexplained = t_stage.b51
@@ -242,26 +303,55 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   #new_staging.unspecified_stage_4_condition = Null
   new_staging.who_stage = t_stage.staging
   new_staging.date_created  = t_stage.cdate
+  new_staging.old.enc_id = $encounter_id
+  new_staging.visit_encounter_id = create_visit_encounter(t_stage.clinicday, patient_id)
+  new_staging.save
+  $encounter_id +=1
 
-  new_staging.save	
 end
 
-def create_hiv_reception_encounter
-
+def create_hiv_reception_encounter(patient,present,date_created, enc_date)
   new_recp_encounter = HivReceptionEncounter.new
-  new_recp_encounter.guardian = Patient.gaurdian
+
+  if present = "B"
+    new_recp_encounter.guardian = patient.gaurdian.relative_id rescue nil
+    new_recp_encounter.guardian_present = "Yes"
+    new_recp_encounter.patient_present = "Yes"
+  elsif present = "G"
+    new_recp_encounter.guardian = patient.gaurdian.relative_id rescue nil
+    new_recp_encounter.guardian_present = "Yes"
+  else
+    new_recp_encounter.patient_present = "Yes"
+  end
+  new_recp_encounter.visit_encounter_id = create_visit_encounter(enc_date,patient.id)
+  new_recp_encounter.patient_id = patient.id
+  new_recp_encounter.old_enc_id = $encounter_id
+  new_recp_encounter.creator = 1
+  new_recp_encounter.encounter_datetime = enc_date
+  new_recp_encounter.date_created = date_created
+  new_recp_encounter.voided = 0
   new_recp_encounter.save
 
+  $encounter_id += 1
 end
 
-def create_vitals_encounter(weight, height, patient_id)
+def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
 
   new_vitals_enc = VitalsEncounter.new
   new_vitals_enc.patient_id = patient_id
   new_vitals_enc.weight = weight
-  new_vitals_enc.height = height
-  new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
+  unless height == 0
+    new_vitals_enc.height = height
+    new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
+  end
+  new_vitals_enc.visit_encounter_id = $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
+  new_vitals_enc.old_enc_id = $encounter_id
+  new_vitals_enc.voided = 0
+  new_vitals_enc.date_created = cdate
+  new_vitals_enc.encounter_datetime = enc_date
+  new_vitals_enc.creator = 1
   new_vitals_enc.save
+  $encounter_id += 1
 
 end
 
@@ -269,9 +359,14 @@ def create_give_drugs_encounter
   #by justin
 end
 
-def create_outcome_encounter
-
+def create_outcome_encounter(t_rec, patient_id)
   #by justin
+  create_outcome_enc = PatientOutcome.new
+  create_outcome_enc.outcome_id = $p_outcome_id
+  create_outcome_enc.patient_id = t_rec.patient_id
+  create_outcome_enc.outcome_state = get_status(t_rec.OutcomeStatus)
+  create_outcome_enc.outcome_date = t_rec.ClinicDay
+   create_outcome_enc.outcome_date.save
 end
 
 def create_art_visit
@@ -318,13 +413,26 @@ def get_relation_gender(patient_gender, relationship)
     else
       gender = "U"
   end
-
  return gender
 end
 
 def get_patient_height(record)
-  #improve method
-  return record.Height
+  #This method gets the hieght of a patient for a particulare visit otherwise it gets the last known height
+
+  if record.Height != 0
+    return record.Height.to_i
+  else
+
+    last_height = TesmartOpdTran.find(:last, :order => "ClinicDay asc",
+                        :conditions => ["arv_no = ? AND Height != 0 AND ClinicDay <= ? ", record.arv_no,record.ClinicDay])
+    if last_height.blank?
+      return TesmartPatient.find( record.arv_no).Height rescue 0
+    else
+      return last_height.Height
+    end
+
+  end
+
 end
 
 def get_status(patient_state)
@@ -334,11 +442,11 @@ def get_status(patient_state)
 	  when "D"
 	  state = "Died"
 	  when "TO" 
-	  state = "Transfered out  (with a letter)"
+	  state = "Transfer Out(With Transfer Note)"
 	  when "DF"
 	   state = "On ART"
 	  when "STOP"
-	  state = "Stopped"
+	  state = "ART Stop"
 	  else
 	    state = "On ART"	  
          end 
@@ -347,10 +455,25 @@ end
 
 def get_location(h_code)
 	 locationdata = Hash.new("Unknown")
-        @sites = Location.find(:all)
+        @sites = TesmartSite.find(:all)
         @sites.each do |loc|
 	 locationdata[loc.h_value] = loc.h_name   
       end
    hospital_name = locationdata[h_code]
    return hospital_name
 end	
+
+def create_visit_encounter(encounter_date, patient)
+  if $visit_encounter_hash["#{patient}#{encounter_date.to_date}"].blank?
+    new_visit_enc = VitalsEncounter.new
+    new_visit_enc.patient_id = patient
+    new_visit_enc.visit_date = encounter_date
+    new_visit_enc.save
+    $visit_encounter_hash["#{patient}#{encounter_date.to_date}"] = new_visit_enc.id
+    return new_visit_enc.id
+  else
+    return $visit_encounter_hash["#{patient}#{encounter_date.to_date}"]
+  end
+
+end
+start
