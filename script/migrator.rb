@@ -1,5 +1,6 @@
 $person_id = 2
 $encounter_id = 1
+$visit_encounter_hash = {}
 def start
   patients = TesmartPatient.all
   count = patients.length
@@ -379,6 +380,20 @@ def get_patient_height(record)
       return last_height.Height
     end
 
+  end
+
+end
+
+def create_visit_encounter(encounter_date, patient)
+  if $visit_encounter_hash["#{patient}#{encounter_date.to_date}"].blank?
+    new_visit_enc = VitalsEncounter.new
+    new_visit_enc.patient_id = patient
+    new_visit_enc.visit_date = encounter_date
+    new_visit_enc.save
+    $visit_encounter_hash["#{patient}#{encounter_date.to_date}"] = new_visit_enc.id
+    return new_visit_enc.id
+  else
+    return $visit_encounter_hash["#{patient}#{encounter_date.to_date}"]
   end
 
 end
