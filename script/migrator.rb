@@ -1,5 +1,5 @@
 $person_id = 2
-@site = 'RU'
+$encounter_id = 1
 def start
   patients = TesmartPatient.all
   count = patients.length
@@ -33,6 +33,7 @@ def start
     next if patient.id == 0
     puts "Working on patient id #{patient.id}, #{count} patients left"
     patient_id = create_patient(patient)
+
     if !patient_id.blank?
       staging = TesmartStaging.find(:last,:order => "clinicday ASC",
                                     :conditions =>["arv_no = ?", patient.id])
@@ -42,6 +43,7 @@ def start
       process_patient_records(patient, patient_id)
     end
     count -= 1
+
   end
 
 end
@@ -74,7 +76,7 @@ def create_patient(t_patient)
   new_patient.cellphone_number = t_patient.CellPhone
   new_patient.occupation = @occupationdata[t_patient.Occupation]
   new_patient.guardian_id = ''
-  new_patient.art_number = "#{@site_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
+  new_patient.art_number = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
   new_patient.voided = 0
   new_patient.creator = 1
   new_patient.date_created = t_patient.cdate
@@ -129,14 +131,15 @@ def process_patient_records(patient, patient_id)
 
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
+  bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
     height = get_patient_height(record)
-    create_vitals_encounter(record.Weight,height, patient_id)
-    
+    create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
+    create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
 
   (dispensation_records || []).each do |disp_record|
-    create_give_drugs_encounter(disp_record, patient_id)
+    create_give_drugs_encounter
   end
 
 end
@@ -146,8 +149,52 @@ def create_outcome
 
 end
 
-def create_first_visit_encounter
-  #by timothy
+def create_first_visit_encounter(t_patient, patient_id,record )
+
+  new_first_visit_enc = FirstVisitEncounter.new
+
+  # new_first_visit_enc.agrees_to_follow_up
+  new_first_visit_enc.date_of_hiv_pos_test = t_patient.HIV_Positive_Date
+  if record.HIV_Positive_Place.blank?
+    new_first_visit_enc.location_of_hiv_pos_test = record.HIV_Positive_Place_text.blank? ? "Unknown" : record.HIV_Positive_Place_text
+  else
+    new_first_visit_enc.location_of_hiv_pos_test = TesmartLookup.find_by_item_code(record.HIV_Positive_Place).code_desc rescue "Unknown"
+  end
+
+	new_first_visit_enc.arv_number_at_that_site = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
+=begin
+  new_first_visit_enc.location_of_art_initiation =
+	# taken_arvs_in_last_two_months
+  # `taken_arvs_in_last_two_weeks`varchar(255),
+
+
+
+	`date_of_art_initiation` date,
+	`ever_registered_at_art` varchar(25),
+	`ever_received_arv` varchar(25),
+=end
+
+  if t_patient.TransferIn == "TI"
+    new_first_visit_enc.has_transfer_letter = "Yes"
+    new_first_visit_enc.site_transferred_from =site_transferred_from
+
+  elsif t_patient.TransferIn == "RI"
+
+  end
+
+	new_first_visit_enc.last_arv_regimen = t_patient.Last_arvDrug
+	new_first_visit_enc.date_last_arv_taken =  t_patient.Last_arvDate
+	new_first_visit_enc.weight = t_patient.Weight
+	new_first_visit_enc.height = t_patient.Height
+	new_first_visit_enc.bmi =
+  new_first_visit_enc.patient_id = patient_id
+  new_first_visit_enc.old_enc_id = $encounter_id
+  new_first_visit_enc.voided = 0
+  new_first_visit_enc.date_created = cdate
+  new_first_visit_enc.encounter_datetime = enc_date
+  new_first_visit_enc.creator = 1
+  new_first_visit_enc.save
+  $encounter_id += 1
 end
 
 def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
@@ -212,27 +259,52 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.hiv_wasting_syndrome = t_stage.d1
   new_staging.who_stage = t_stage.staging
   new_staging.date_created  = t_stage.cdate
-
-  new_staging.save	
+  new_staging.old.enc_id = $encounter_id
+  new_staging.save
+  $encounter_id +=1
 end
 
-def create_hiv_reception_encounter
-
+def create_hiv_reception_encounter(patient,present,date_created, enc_date)
   new_recp_encounter = HivReceptionEncounter.new
-  new_recp_encounter.guardian = Patient.gaurdian
+
+  if present = "B"
+    new_recp_encounter.guardian = patient.gaurdian.relative_id rescue nil
+    new_recp_encounter.guardian_present = "Yes"
+    new_recp_encounter.patient_present = "Yes"
+  elsif present = "G"
+    new_recp_encounter.guardian = patient.gaurdian.relative_id rescue nil
+    new_recp_encounter.guardian_present = "Yes"
+  else
+    new_recp_encounter.patient_present = "Yes"
+  end
+  new_recp_encounter.patient_id = patient.id
+  new_recp_encounter.old_enc_id = $encounter_id
+  new_recp_encounter.creator = 1
+  new_recp_encounter.encounter_datetime = enc_date
+  new_recp_encounter.date_created = date_created
+  new_recp_encounter.voided = 0
   new_recp_encounter.save
 
+  $encounter_id += 1
 end
 
-def create_vitals_encounter(weight, height, patient_id)
+def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
 
   new_vitals_enc = VitalsEncounter.new
   new_vitals_enc.patient_id = patient_id
   new_vitals_enc.weight = weight
-  new_vitals_enc.height = height
-  new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
+  unless height == 0
+    new_vitals_enc.height = height
+    new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
+  end
+  new_vitals_enc.old_enc_id = $encounter_id
+  new_vitals_enc.voided = 0
+  new_vitals_enc.date_created = cdate
+  new_vitals_enc.encounter_datetime = enc_date
+  new_vitals_enc.creator = 1
   new_vitals_enc.save
 
+  $encounter_id += 1
 end
 
 def create_give_drugs_encounter
@@ -293,7 +365,21 @@ def get_relation_gender(patient_gender, relationship)
 end
 
 def get_patient_height(record)
-  #improve method
-  return record.Height
+  #This method gets the hieght of a patient for a particulare visit otherwise it gets the last known height
+
+  if record.Height != 0
+    return record.Height.to_i
+  else
+
+    last_height = TesmartOpdTran.find(:last, :order => "ClinicDay asc",
+                        :conditions => ["arv_no = ? AND Height != 0 AND ClinicDay <= ? ", record.arv_no,record.ClinicDay])
+    if last_height.blank?
+      return TesmartPatient.find( record.arv_no).Height rescue 0
+    else
+      return last_height.Height
+    end
+
+  end
+
 end
 start
