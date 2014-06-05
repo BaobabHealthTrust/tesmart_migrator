@@ -336,8 +336,7 @@ end
 
 def create_give_drugs_encounter(t_rec,patient_id,cdate)
   #by justin
-  drugs = []
-  
+  drugs = 
   give_drug = GiveDrugsEncounter.new
   give_drug.visit_encounter_id =
   give_drug.
@@ -422,6 +421,9 @@ end
 
 def get_patient_drugs(record)
 	patient_drugs = TesmartOpdTran.find(:all, :order => "ClinicDay asc", :conditions => ["arv_no = ?", record.arv_no])
+	if patient_drugs.length > 1
+	   	
+	end	
 	return patient_drugs
 end	
 def get_status(patient_state)
