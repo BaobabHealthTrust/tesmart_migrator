@@ -469,9 +469,9 @@ def create_art_visit(record,patient,bart_patient)
   new_art_visit.drug_induced_lipodystrophy = ""
   new_art_visit.drug_induced_skin_rash = ""
   new_art_visit.drug_induced_other_symptom = ""
-  new_art_visit.tb_status = ""
+  new_art_visit.tb_status = get_tb_status(record.Tb_status)
   new_art_visit.refer_to_clinician = ""
-  new_art_visit.prescribe_arv = ""
+  new_art_visit.prescribe_arv = "Yes" if !record.OfThoseAlive.blank?
 
   last_disp = get_last_dispensations(record.ClinicDay, record.id)
   drug_no = 1
@@ -652,5 +652,20 @@ def get_last_dispensations(clinic_date, patient_id)
               ClinicDay = (SELECT MAX(ClinicDay) from opd_tran where arv_no = #{patient_id} AND DATE(ClinicDay) < DATE(#{clinic_date}))")
 
   return records
+end
+
+def get_tb_status(status)
+  case status
+    when "No"
+      return "TB NOT suspected"
+    when "Yes"
+      return "TB suspected"
+    when "Rx"
+      return "Confirmed TB on treatment"
+    when "NoRx"
+      return "Confirmed TB NOT on treatment"
+    else
+      return "Unknown"
+  end
 end
 start
