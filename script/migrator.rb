@@ -134,19 +134,16 @@ def process_patient_records(patient, patient_id)
   $outcome_encounter = 1
   $p_outcome_id = 1
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
-  dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
     #height = get_patient_height(record)
     create_outcome(record,patient_id,record.cdate)
     create_outcome_encounter(record, patient_id,record.cdate)
+    create_give_drugs_encounter(record.ClinicDay, patient, bart_patient)
     #create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     #create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
 
-  (dispensation_records || []).each do |disp_record|
-    #create_give_drugs_encounter
-  end
 
 end
 
@@ -334,8 +331,66 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
 
 end
 
-def create_give_drugs_encounter
+def create_give_drugs_encounter(clinic_day, t_patient, b_patient)
   #by justin
+  dispensation_records = TesmartOpdTran.find(:all,
+                                             :conditions => ["arv_no = ? AND ClinicDay = ? ", t_patient.id, clinic_day])
+  unless dispensation_records.blank?
+    new_give_drug_enc = GiveDrugsEncounter.new
+    drug_no = 1
+    (dispensation_records || []).each do |drug_disp|
+        case drug_no
+          when 1
+            new_give_drug_enc.pres_drug_name1 = ""
+            new_give_drug_enc.pres_dosage1 = ""
+            new_give_drug_enc.pres_frequency1 = ""
+            new_give_drug_enc.dispensed_drug_name1 = ""
+            new_give_drug_enc.dispensed_dosage1 = ""
+            new_give_drug_enc.dispensed_quantity1 = ""
+          when 2
+            new_give_drug_enc.pres_drug_name2 = ""
+            new_give_drug_enc.pres_dosage2 = ""
+            new_give_drug_enc.pres_frequency2 = ""
+            new_give_drug_enc.dispensed_drug_name2 = ""
+            new_give_drug_enc.dispensed_dosage2 = ""
+            new_give_drug_enc.dispensed_quantity2 = ""
+          when 3
+            new_give_drug_enc.pres_drug_name3 = ""
+            new_give_drug_enc.pres_dosage3 = ""
+            new_give_drug_enc.pres_frequency3 = ""
+            new_give_drug_enc.dispensed_drug_name3 = ""
+            new_give_drug_enc.dispensed_dosage3 = ""
+            new_give_drug_enc.dispensed_quantity3 = ""
+          when 4
+            new_give_drug_enc.pres_drug_name4 = ""
+            new_give_drug_enc.pres_dosage4 = ""
+            new_give_drug_enc.pres_frequency4 = ""
+            new_give_drug_enc.dispensed_drug_name4 = ""
+            new_give_drug_enc.dispensed_dosage4 = ""
+            new_give_drug_enc.dispensed_quantity4 = ""
+          when 5
+            new_give_drug_enc.pres_drug_name5 = ""
+            new_give_drug_enc.pres_dosage5 = ""
+            new_give_drug_enc.pres_frequency5 = ""
+            new_give_drug_enc.dispensed_drug_name5 = ""
+            new_give_drug_enc.dispensed_dosage5 = ""
+            new_give_drug_enc.dispensed_quantity5 = ""
+        end
+      drug_no += 1
+    end
+
+    new_give_drug_enc.patient_id = b_patient.id
+    new_give_drug_enc.old_enc_id = $encounter_id
+    new_give_drug_enc.visit_encounter_id = create_visit_encounter(clinic_day, b_patient.id)
+    new_give_drug_enc.voided = 0
+    new_give_drug_enc.date_created = dispensation_records.first.cdate
+    new_give_drug_enc.encounter_datetime = clinic_day
+    new_give_drug_enc.creator = 1
+    new_give_drug_enc.save
+    $encounter_id += 1
+  end
+
+
 end
 
 def create_outcome_encounter(t_rec, patient_id,enc_date)
