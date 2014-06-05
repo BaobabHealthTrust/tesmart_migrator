@@ -283,6 +283,7 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.who_stage = t_stage.staging
   new_staging.date_created  = t_stage.cdate
   new_staging.old.enc_id = $encounter_id
+  new_staging.visit_encounter_id = create_visit_encounter(t_stage.clinicday, patient_id)
   new_staging.save
   $encounter_id +=1
 =end
