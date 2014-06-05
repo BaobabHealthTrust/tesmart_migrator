@@ -137,8 +137,8 @@ def process_patient_records(patient, patient_id)
   dispensation_records = TesmartOpdTran.find(:all, :conditions => ["arv_no = ? ", patient.id] )
   bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
-    #height = get_patient_height(record)
-    create_outcome(record,patient_id,record.cdate)
+    height = get_patient_height(record)
+    create_outcome(record,patient_id)
     create_outcome_encounter(record, patient_id,record.cdate)
     #create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     #create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
@@ -150,11 +150,11 @@ def process_patient_records(patient, patient_id)
 
 end
 
-def create_outcome(t_rec,patient_id,enc_date)
+def create_outcome(t_rec,patient_id)
   #by justin
 
      outcome = OutcomeEncounter.new
-     outcome.visit_encounter_id =  $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
+     outcome.visit_encounter_id = create_visit_encounter(t_rec.ClinicDay,patient_id)
      outcome.old_enc_id = $encounter_id
      outcome.patient_id =  patient_id
      outcome.state = get_status(t_rec.OutcomeStatus )
@@ -165,7 +165,7 @@ def create_outcome(t_rec,patient_id,enc_date)
      outcome.location = $hospital_id
      outcome.voided = 0
      outcome.encounter_datetime = t_rec.ClinicDay
-     outcome.date_created = t_rec.mdate
+     outcome.date_created = t_rec.cdate
      outcome.creator = 1
      outcome.save
      $encounter_id += 1
@@ -185,17 +185,13 @@ def create_first_visit_encounter(t_patient, patient_id,record )
   end
 
 	new_first_visit_enc.arv_number_at_that_site = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
-=begin
-  new_first_visit_enc.location_of_art_initiation =
-	# taken_arvs_in_last_two_months
-  # `taken_arvs_in_last_two_weeks`varchar(255),
+  new_first_visit_enc.location_of_art_initiation = ""
+	new_first_visit_enc.taken_arvs_in_last_two_months = ""
+  new_first_visit_enc.taken_arvs_in_last_two_weeks = ""
+	new_first_visit_enc.date_of_art_initiation = ""
+	new_first_visit_enc.ever_registered_at_art = ""
+	new_first_visit_enc.ever_received_arv = ""
 
-
-
-	`date_of_art_initiation` date,
-	`ever_registered_at_art` varchar(25),
-	`ever_received_arv` varchar(25),
-=end
 
   if t_patient.TransferIn == "TI"
     new_first_visit_enc.has_transfer_letter = "Yes"
@@ -222,7 +218,7 @@ end
 
 def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   #by temwa
-=begin new_staging = HivStagingEncounter.new
+  new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
   new_staging.patient_pregnant = t_stage.a3
   new_staging.patient_breast_feeding = t_stage.a4
@@ -286,7 +282,7 @@ def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
   new_staging.visit_encounter_id = create_visit_encounter(t_stage.clinicday, patient_id)
   new_staging.save
   $encounter_id +=1
-=end
+
 end
 
 def create_hiv_reception_encounter(patient,present,date_created, enc_date)
