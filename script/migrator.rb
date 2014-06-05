@@ -160,7 +160,7 @@ def create_outcome(t_rec,patient_id,enc_date)
      outcome.state = get_status(t_rec.OutcomeStatus )
      outcome.outcome_date =  t_rec.ClinicDay
      if !(t_rec.TransferOutTo.blank?)
-     outcome.transfer_out_location = get_location(t_rec.TransferOutTo)
+     outcome.transferred_out_location = get_location(t_rec.TransferOutTo)
      end
      outcome.location = $hospital_id
      outcome.voided = 0
@@ -341,6 +341,7 @@ def create_outcome_encounter(t_rec, patient_id,enc_date)
   #by justin
   create_outcome_enc = PatientOutcome.new
   create_outcome_enc.outcome_id = $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"]
+  create_outcome_enc.visit_encounter_id =  $visit_encounter_hash["#{patient_id}#{enc_date}"].blank? ? create_visit_encounter(enc_date,patient_id) : $visit_encounter_hash["#{patient_id}#{enc_date}"] 
   create_outcome_enc.patient_id = patient_id
   create_outcome_enc.outcome_state = get_status(t_rec.OutcomeStatus)
   create_outcome_enc.outcome_date = t_rec.ClinicDay
