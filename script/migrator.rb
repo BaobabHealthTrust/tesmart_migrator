@@ -140,6 +140,7 @@ def process_patient_records(patient, patient_id)
     create_outcome(record,patient_id)
     create_outcome_encounter(record, patient_id,record.cdate)
     create_give_drugs_encounter(record.ClinicDay, patient, bart_patient)
+    create_art_visit(record,patient,bart_patient)
     #create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     #create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
@@ -169,45 +170,44 @@ def create_outcome(t_rec,patient_id)
 
 end
 
-def create_first_visit_encounter(t_patient, patient_id,record )
+def create_first_visit_encounter(t_patient, patient_id)
 
   new_first_visit_enc = FirstVisitEncounter.new
-
-  # new_first_visit_enc.agrees_to_follow_up
+  new_first_visit_enc.agrees_to_follow_up = get_followup_status(t_patient, record)
   new_first_visit_enc.date_of_hiv_pos_test = t_patient.HIV_Positive_Date
+  new_first_visit_enc.date_of_art_initiation = t_patient.FirstLineARV
+
   if record.HIV_Positive_Place.blank?
-    new_first_visit_enc.location_of_hiv_pos_test = record.HIV_Positive_Place_text.blank? ? "Unknown" : record.HIV_Positive_Place_text
+    new_first_visit_enc.location_of_hiv_pos_test = t_patient.HIV_Positive_Place_text.blank? ? "Unknown" : t_patient.HIV_Positive_Place_text
   else
-    new_first_visit_enc.location_of_hiv_pos_test = TesmartLookup.find_by_item_code(record.HIV_Positive_Place).code_desc rescue "Unknown"
+    new_first_visit_enc.location_of_hiv_pos_test = TesmartLookup.find_by_item_code(t_patient.HIV_Positive_Place).code_desc rescue "Unknown"
   end
-
-	new_first_visit_enc.arv_number_at_that_site = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
-  new_first_visit_enc.location_of_art_initiation = ""
-	new_first_visit_enc.taken_arvs_in_last_two_months = ""
-  new_first_visit_enc.taken_arvs_in_last_two_weeks = ""
-	new_first_visit_enc.date_of_art_initiation = ""
-	new_first_visit_enc.ever_registered_at_art = ""
-	new_first_visit_enc.ever_received_arv = ""
-
 
   if t_patient.TransferIn == "TI"
     new_first_visit_enc.has_transfer_letter = "Yes"
-    new_first_visit_enc.site_transferred_from =site_transferred_from
-
-  elsif t_patient.TransferIn == "RI"
-
+    new_first_visit_enc.site_transferred_from = t_patient.Transferinsite.blank? ? "Unknown" : get_location(t_patient.Transferinsite)
   end
 
-	new_first_visit_enc.last_arv_regimen = t_patient.Last_arvDrug
-	new_first_visit_enc.date_last_arv_taken =  t_patient.Last_arvDate
+  if (t_patient.TransferIn == "TI" || t_patient.TransferIn == "RI")
+    new_first_visit_enc.arv_number_at_that_site = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
+    # new_first_visit_enc.taken_arvs_in_last_two_months = "" key variable not collected
+    # new_first_visit_enc.taken_arvs_in_last_two_weeks = "" key variable not collected
+    new_first_visit_enc.ever_registered_at_art = "Yes"
+    new_first_visit_enc.ever_received_arv = "Yes"
+    new_first_visit_enc.last_arv_regimen = t_patient.Last_arvDrug
+    new_first_visit_enc.date_last_arv_taken =  t_patient.Last_arvDate unless (t_patient.Last_arvDate.blank? || t_patient.Last_arvDate.to_date == "1899-12-30".to_date)
+  end
+
+  new_first_visit_enc.location_of_art_initiation = get_location(t_patient.FirstLineARVsite.blank? ? $hospital_id : t_patient.FirstLineARVsite)
 	new_first_visit_enc.weight = t_patient.Weight
 	new_first_visit_enc.height = t_patient.Height
-	new_first_visit_enc.bmi =
+	new_first_visit_enc.bmi = (t_patient.weight.to_f/(t_patient.height.to_f*t_patient.height.to_f)*10000) rescue nil
   new_first_visit_enc.patient_id = patient_id
   new_first_visit_enc.old_enc_id = $encounter_id
+  new_first_visit_enc.visit_encounter_id = create_visit_encounter(t_patient.DateOfBegin,patient_id)
   new_first_visit_enc.voided = 0
   new_first_visit_enc.date_created = cdate
-  new_first_visit_enc.encounter_datetime = enc_date
+  new_first_visit_enc.encounter_datetime = t_patient.DateOfBegin
   new_first_visit_enc.creator = 1
   new_first_visit_enc.save
   $encounter_id += 1
@@ -400,8 +400,94 @@ def create_outcome_encounter(t_rec, patient_id,enc_date)
   create_outcome_enc.save
 end
 
-def create_art_visit
+def create_art_visit(record,patient,bart_patient)
   #by timothy
+  new_art_visit  = ArtVisitEncounter.new
+
+  new_art_visit.visit_encounter_id = create_visit_encounter(record.ClinicDay,bart_patient.id)
+  new_art_visit.old_enc_id = $encounter_id
+  new_art_visit.patient_id = bart_patient.patient_id
+  new_art_visit.patient_pregnant = "Yes" if (record.pregnacy == "Y")
+  new_art_visit.using_family_planning_method = "Yes" if (record.Depo == "Y" || record.Condom > 0)
+  new_art_visit.family_planning_method_used = (record.Depo == "Y") ? "Depo Vera" : "Condom" if new_art_visit.using_family_planning_method == "Yes"
+  new_art_visit.abdominal_pains = ""
+  new_art_visit.anorexia = ""
+  new_art_visit.cough = ""
+  new_art_visit.diarrhoea = ""
+  new_art_visit.fever = ""
+  new_art_visit.jaundice = ""
+  new_art_visit.leg_pain_numbness = ""
+  new_art_visit.vomit = ""
+  new_art_visit.weight_loss = ""
+  new_art_visit.peripheral_neuropathy = ""
+  new_art_visit.hepatitis = ""
+  new_art_visit.anaemia = ""
+  new_art_visit.lactic_acidosis = ""
+  new_art_visit.lipodystrophy = ""
+  new_art_visit.skin_rash = ""
+  new_art_visit.other_symptoms = ""
+  new_art_visit.drug_induced_Abdominal_pains = ""
+  new_art_visit.drug_induced_anorexia = ""
+  new_art_visit.drug_induced_diarrhoea = ""
+  new_art_visit.drug_induced_jaundice = ""
+  new_art_visit.drug_induced_leg_pain_numbness = ""
+  new_art_visit.drug_induced_vomit = ""
+  new_art_visit.drug_induced_peripheral_neuropathy = ""
+  new_art_visit.drug_induced_hepatitis = ""
+  new_art_visit.drug_induced_anaemia = ""
+  new_art_visit.drug_induced_lactic_acidosis = ""
+  new_art_visit.drug_induced_lipodystrophy = ""
+  new_art_visit.drug_induced_skin_rash = ""
+  new_art_visit.drug_induced_other_symptom = ""
+  new_art_visit.tb_status = ""
+  new_art_visit.refer_to_clinician = ""
+  new_art_visit.prescribe_arv = ""
+
+  last_disp = get_last_dispensations(record.ClinicDay, record.id)
+  drug_no = 1
+
+  (last_disp || []).each do |dispensation|
+    case drug_no
+      when 1
+
+        new_art_visit.drug_name_brought_to_clinic1 = ""
+        new_art_visit.drug_quantity_brought_to_clinic1 = dispensation.leftqty
+        new_art_visit.drug_left_at_home1 = 0
+
+      when 2
+
+        new_art_visit.drug_name_brought_to_clinic2 = ""
+        new_art_visit.drug_quantity_brought_to_clinic2 = dispensation.leftqty
+        new_art_visit.drug_left_at_home2 = 0
+
+      when 3
+
+        new_art_visit.drug_name_brought_to_clinic3 = ""
+        new_art_visit.drug_quantity_brought_to_clinic3 = dispensation.leftqty
+        new_art_visit.drug_left_at_home3 = 0
+
+      when 4
+
+        new_art_visit.drug_name_brought_to_clinic4 = ""
+        new_art_visit.drug_quantity_brought_to_clinic4 = dispensation.leftqty
+        new_art_visit.drug_left_at_home4 = 0
+    end
+    drug_no += 1
+  end
+
+  new_art_visit.arv_regimen = record.OfThoseAlive
+  new_art_visit.prescribe_cpt = ""
+  new_art_visit.prescribe_ipt = ""
+  new_art_visit.number_of_condoms_given = record.Condom
+  new_art_visit.depo_provera_given = "Yes" if record.Depo == "Y"
+  new_art_visit.continue_treatment_at_clinic = "Yes" if record.OutcomeStatus = "A"
+  new_art_visit.continue_art = "Yes" if record.OutcomeStatus = "A"
+  new_art_visit.voided = 0
+  new_art_visit.encounter_datetime = record.ClinicDay
+  new_art_visit.date_created = record.cdate
+  new_art_visit.creator = 1
+  new_art_visit.save
+  $encounter_id += 1
 end
 
 def get_relationship(per)
@@ -492,13 +578,7 @@ def get_status(patient_state)
 end	
 
 def get_location(h_code)
-	 locationdata = Hash.new("Unknown")
-        @sites = TesmartSite.find(:all)
-        @sites.each do |loc|
-	 locationdata[loc.h_value] = loc.h_name   
-      end
-   hospital_name = locationdata[h_code]
-   return hospital_name
+   return TesmartSite.find(h_code).h_name rescue "Unknown"
 end	
 
 def create_visit_encounter(encounter_date, patient)
@@ -512,6 +592,31 @@ def create_visit_encounter(encounter_date, patient)
   else
     return $visit_encounter_hash["#{patient}#{encounter_date.to_date}"]
   end
+end
 
+def get_followup_status(t_patient, record)
+  case t.patient.Pursue
+    when "Y"
+      return "Yes"
+
+    when "N"
+      return "No"
+
+    else
+      check = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? AND ClinicDay > ?", t_patient.id, record.ClinicDay])
+      if check.blank?
+        return "No"
+      else
+        return "True"
+      end
+  end
+end
+
+def get_last_dispensations(clinic_date, patient_id)
+
+  records = TesmartOpdTran.find_by_sql("SELECT e.* FROM opd_tran as e where e.arv_no = #{patient_id} AND
+              ClinicDay = (SELECT MAX(ClinicDay) from opd_tran where arv_no = #{patient_id} AND DATE(ClinicDay) < DATE(#{clinic_date}))")
+
+  return records
 end
 start
