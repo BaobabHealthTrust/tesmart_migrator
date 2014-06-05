@@ -334,8 +334,13 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
 
 end
 
-def create_give_drugs_encounter
+def create_give_drugs_encounter(t_rec,patient_id,cdate)
   #by justin
+  drugs = []
+  
+  give_drug = GiveDrugsEncounter.new
+  give_drug.visit_encounter_id =
+  give_drug.
 end
 
 def create_outcome_encounter(t_rec, patient_id,enc_date)
@@ -415,6 +420,10 @@ def get_patient_height(record)
 
 end
 
+def get_patient_drugs(record)
+	patient_drugs = TesmartOpdTran.find(:all, :order => "ClinicDay asc", :conditions => ["arv_no = ?", record.arv_no])
+	return patient_drugs
+end	
 def get_status(patient_state)
 	 case  patient_state
 	 when "A"
