@@ -358,6 +358,10 @@ end
 def create_give_drugs_encounter(clinic_day, t_patient, patient_id)
   #by justin
   #tesmart to openmrs drug mapping
+<<<<<<< HEAD
+  drug_code = {"TDF3TC"=>[734,"TDF/3TC (Tenofavir and Lamivudine 300/300mg tablet","IN THE EVENING",1,7928], "CPT"=>[297,"Cotrimoxazole (480mg tablet)","TWICE A DAY(BD)", 1,916], "CO"=>[297,"Cotrimoxazole (480mg tablet)","TWICE A DAY (BD)", 1,916],"CTX"=>[576,"Cotrimoxazole (960mg tablet)","IN THE EVENING (QPM)",1,916], "ATV/r_A"=>[817,"atr/A 100/200mg","IN THE EVENING (QPM)",1,8384], "L3015_A"=>[613,"d4T/3TC/NVP (30/150/200mg tablet)","ONCE A DAY (od)",1,792], "T3060_A"=>[613,"d4T/3TC/NVP (30/150/200mg tablet)","TWICE A DAY(BD)",1,792], "AZT3TCN_A"=>[731,"AZT/3TC/NVP (300/150/200mg tablet)","TWICE A DAY (BD)",1,1610], "AZT3TCN_P"=>[732,"AZT/3TC/NVP (60/30/50mg tablet)","TWICE A DAY (BD)",1,1610], "TDF3TCEFV"=>[735,"TDF/3TC/EFV (300/300/600mg tablet)","IN THE EVENING (QPM)",1,2985], "L3015_P"=>[72,"Triomune baby (d4T/3TC/NVP 6/30/50mg tablet)","TWICE A DAY(BD)",1,2985], "AZT3TCN_P"=>[732,"AZT/3TC/NVP (60/30/50mg tablet)","TWICE A DAY (BD)",1,1610], "ABC3TC"=>[733,"ABC/3TC (Abacavir and Lamivudine 60/30mg tablet)","TWICE A DAY (BD)",4,7927], "AZT3TC_A"=>[731,"AZT/3TC/NVP (300/150/200mg tablet)","TWICE A DAY (BD)",1,1610], "AZT3TC_P"=>[732,"AZT/3TC/NVP (60/30/50mg tablet)","TWICE A DAY (BD)",1,1610], "LPVr_P"=>[74,"LPV/r (Lopinavir and Ritonavir 100/25mg tablet)","TWICE A DAY (BD)",2,794], "LPVr_A"=>[73,"LPV/r (Lopinavir and Ritonavir 200/50mg tablet)","TWICE A DAY (BD)",2,794], "L3060_P"=>[737,"d4T/3TC (Stavudine Lamivudine 6/30mg tablet)","ONCE A DAY (od)",1,2833], "L3060_A"=>[738,"d4T/3TC (Stavudine Lamivudine 30/150 tablet)","ONCE A DAY (od)",1,2833], "T3060_P"=>[72,"Triomune baby (d4T/3TC/NVP 6/30/50mg tablet)","IN THE EVENING (QPM)",1,792], "T3015_A"=>[613,"d4T/3TC/NVP (30/150/200mg tablet)","IN THE EVENING (QPM)",1,792], "T3015_P"=>[737,"d4T/3TC/NVP (Stavudine Lamivudine 6/30mg/50mg tablet","IN THE EVENING (QPM)",1,2833], "EFV_A"=>[11,"EFV (Efavirenz 600mg tablet)","IN THE EVENING (QPM)",1,633], "EFV_P"=>[30,"EFV (Efavirenz 200mg tablet)","IN THE EVENING (QPM)",1,633], "NVP"=>[22,"NVP (Nevirapine 200 mg tablet)","TWICE A DAY (BD)",1,631], "IPT"=>[24,"INH or H (Isoniazid 100mg tablet)","IN THE EVENING (QPM)",1,656] }	
+=======
+>>>>>>> fa191d5836959fc7a140d024ceb99a040f7678ea
   dispensation_records = TesmartOpdTran.find(:all,
                                              :conditions => ["arv_no = ? AND ClinicDay = ? ", t_patient.id, clinic_day])
   unless dispensation_records.blank?
@@ -584,7 +588,7 @@ end
 
 def get_drug_frequency(frequency)
 	case frequency
-		when "TWICE A DAY (BD)"
+		when "TWICE A DAY(BD)"
 		times = 2 
 		when "IN THE EVENING (QPM)"
 		times = 1 
