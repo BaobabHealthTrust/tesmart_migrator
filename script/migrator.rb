@@ -440,38 +440,71 @@ def create_art_visit(record,patient,bart_patient)
   new_art_visit.patient_pregnant = "Yes" if (record.pregnacy == "Y")
   new_art_visit.using_family_planning_method = "Yes" if (record.Depo == "Y" || record.Condom > 0)
   new_art_visit.family_planning_method_used = (record.Depo == "Y") ? "Depo Vera" : "Condom" if new_art_visit.using_family_planning_method == "Yes"
-  new_art_visit.abdominal_pains = ""
-  new_art_visit.anorexia = ""
-  new_art_visit.cough = ""
-  new_art_visit.diarrhoea = ""
-  new_art_visit.fever = ""
-  new_art_visit.jaundice = ""
-  new_art_visit.leg_pain_numbness = ""
-  new_art_visit.vomit = ""
-  new_art_visit.weight_loss = ""
-  new_art_visit.peripheral_neuropathy = ""
-  new_art_visit.hepatitis = ""
-  new_art_visit.anaemia = ""
-  new_art_visit.lactic_acidosis = ""
-  new_art_visit.lipodystrophy = ""
-  new_art_visit.skin_rash = ""
-  new_art_visit.other_symptoms = ""
-  new_art_visit.drug_induced_Abdominal_pains = ""
-  new_art_visit.drug_induced_anorexia = ""
-  new_art_visit.drug_induced_diarrhoea = ""
-  new_art_visit.drug_induced_jaundice = ""
-  new_art_visit.drug_induced_leg_pain_numbness = ""
-  new_art_visit.drug_induced_vomit = ""
-  new_art_visit.drug_induced_peripheral_neuropathy = ""
-  new_art_visit.drug_induced_hepatitis = ""
-  new_art_visit.drug_induced_anaemia = ""
-  new_art_visit.drug_induced_lactic_acidosis = ""
-  new_art_visit.drug_induced_lipodystrophy = ""
-  new_art_visit.drug_induced_skin_rash = ""
-  new_art_visit.drug_induced_other_symptom = ""
-  new_art_visit.tb_status = get_tb_status(record.Tb_status)
-  new_art_visit.refer_to_clinician = ""
-  new_art_visit.prescribe_arv = "Yes" if !record.OfThoseAlive.blank?
+
+  if !record.caseM.blank?
+    if record.caseM_desc.blank?
+      new_art_visit.other_symptoms = "Yes"
+    else
+      new_art_visit.abdominal_pains = "Yes" if record.caseM_desc.upcase.match(/ABDOMINAL PAIN/i)
+      new_art_visit.anorexia = ""
+      new_art_visit.cough = "Yes" if record.caseM_desc.upcase.match(/COUGH/i)
+      new_art_visit.diarrhoea = "Yes" if record.caseM_desc.upcase.match(/DIARRHOEA/i)
+      new_art_visit.fever = "Yes" if record.caseM_desc.upcase.match(/FEVER/i)
+      new_art_visit.jaundice = "Yes" if record.caseM_desc.upcase.match(/YELLOW/i)
+      new_art_visit.leg_pain_numbness = "Yes" if record.caseM_desc.upcase.match(/LEG PAIN/i)
+      new_art_visit.leg_pain_numbness = "Yes" if record.caseM_desc.upcase.match(/NUMBNESS/i)
+      new_art_visit.vomit = "Yes" if record.caseM_desc.upcase.match(/VOMIT/i)
+      new_art_visit.weight_loss = "Yes" if record.caseM_desc.upcase.match(/MALNUTRITION/i)
+=begin
+      No matching options for these
+      new_art_visit.peripheral_neuropathy = ""
+      new_art_visit.hepatitis = ""
+      new_art_visit.anaemia = ""
+      new_art_visit.lactic_acidosis = ""
+=end
+      new_art_visit.lipodystrophy = "Yes" if record.caseM_desc.upcase.match(/BODY SHAPE/i)
+      new_art_visit.skin_rash = "Yes" if record.caseM_desc.upcase.match(/RASH/i)
+      new_art_visit.other_symptoms = "Yes" if record.caseM_desc.upcase.match(/OTHER/i)
+    end
+  end
+
+
+
+  if !record.SideEffects.blank?
+    case record.SideEffects
+
+      when "OT"
+        new_art_visit.drug_induced_other_symptom = "Yes"
+      when "PN"
+        new_art_visit.drug_induced_peripheral_neuropathy = "Yes"
+      when "SK"
+        new_art_visit.drug_induced_skin_rash = "Yes"
+      when "Y"
+          if record.side_desc.blank?
+            new_art_visit.drug_induced_other_symptom = "Yes"
+          else
+            new_art_visit.drug_induced_skin_rash = "Yes" if record.side_desc.upcase.match(/SK/i)
+            new_art_visit.drug_induced_peripheral_neuropathy = "Yes" if record.side_desc.upcase.match(/PN/i)
+            new_art_visit.drug_induced_peripheral_neuropathy = "Yes" if record.side_desc.upcase.match(/PERIPHERAL NEUROPATHY/i)
+            new_art_visit.drug_induced_other_symptom = "Yes" if record.side_desc.upcase.match(/OTHER/i)
+            new_art_visit.drug_induced_lipodystrophy = "Yes" if record.side_desc.upcase.match(/LD/i)
+            new_art_visit.drug_induced_lipodystrophy = "Yes" if record.side_desc.upcase.match(/LIPODYSTROPHY/i)
+            new_art_visit.drug_induced_lipodystrophy = "Yes" if record.side_desc.upcase.match(/LIP/i)
+            new_art_visit.drug_induced_anaemia = "Yes" if record.side_desc.upcase.match(/ANAEMIA/i)
+            new_art_visit.drug_induced_lactic_acidosis = "Yes" if record.side_desc.upcase.match(/LACTIC ACIDOSIS/i)
+            new_art_visit.drug_induced_hepatitis = "Yes" if record.side_desc.upcase.match(/HP/i)
+            new_art_visit.drug_induced_hepatitis = "Yes" if record.side_desc.upcase.match(/HEPATITIS/i)
+            new_art_visit.drug_induced_Abdominal_pains = "Yes" if record.side_desc.upcase.match(/ABDOMINAL/i)
+            new_art_visit.drug_induced_anorexia = "Yes" if record.side_desc.upcase.match(/ANOREXIA/i)
+            new_art_visit.drug_induced_diarrhoea = "Yes" if record.side_desc.upcase.match(/DIARRHOEA/i)
+            new_art_visit.drug_induced_jaundice = "Yes" if record.side_desc.upcase.match(/JAUNDICE/i)
+            new_art_visit.drug_induced_leg_pain_numbness = "Yes" if record.side_desc.upcase.match(/NUMBNESS/i)
+            new_art_visit.drug_induced_vomit = "Yes" if record.side_desc.upcase.match(/VOMIT/i)
+          end
+      when "AN"
+        new_art_visit.drug_induced_anorexia = "Yes"
+    end
+  end
 
   last_disp = get_last_dispensations(record.ClinicDay, record.id)
   drug_no = 1
@@ -503,11 +536,13 @@ def create_art_visit(record,patient,bart_patient)
         new_art_visit.drug_left_at_home4 = 0
     end
     drug_no += 1
+    new_art_visit.prescribe_cpt = "Yes" if $drug_code[dispensation.item_code][1].match(/Cotrimoxazole/i) rescue false
+    new_art_visit.prescribe_ipt = "Yes" if $drug_code[dispensation.item_code][1].match(/Isoniazid/i) rescue false
   end
 
-  new_art_visit.arv_regimen = record.OfThoseAlive
-  new_art_visit.prescribe_cpt = ""
-  new_art_visit.prescribe_ipt = ""
+  new_art_visit.tb_status = get_tb_status(record.Tb_status)
+  new_art_visit.prescribe_arv = "Yes" if !record.OfThoseAlive.blank?
+  new_art_visit.arv_regimen = record.OfThoseAlive if !record.OfThoseAlive.blank?
   new_art_visit.number_of_condoms_given = record.Condom
   new_art_visit.depo_provera_given = "Yes" if record.Depo == "Y"
   new_art_visit.continue_treatment_at_clinic = "Yes" if record.OutcomeStatus = "A"
