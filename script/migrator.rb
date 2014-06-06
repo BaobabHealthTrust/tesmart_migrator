@@ -37,11 +37,11 @@ def start
     puts "Working on patient id #{patient.id}, #{count} patients left"
     patient_id = create_patient(patient)
 
-    if !patient_id.blank?
+   if !patient_id.blank?
       staging = TesmartStaging.find(:last,:order => "clinicday ASC",
                                     :conditions =>["arv_no = ?", patient.id])
 
-      #create_hiv_staging_encounter(staging,patient,patient_id)
+      create_hiv_staging_encounter(staging, patient_id) unless staging.blank?
 #      create_first_visit_encounter
       process_patient_records(patient, patient_id)
     end
@@ -142,10 +142,12 @@ def process_patient_records(patient, patient_id)
     create_give_drugs_encounter(record.ClinicDay, patient, patient_id)
     #create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     #create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
+    #create_hiv_staging_encounter(staging,patient_id )
+
   end
 
+  end
 
-end
 
 def create_outcome(t_rec,patient_id)
   #by justin
@@ -213,95 +215,96 @@ def create_first_visit_encounter(t_patient, patient_id,record )
   $encounter_id += 1
 end
 
-def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
-  sssssss#by temwa
+def create_hiv_staging_encounter( staging, patient_id)
+ #by temwa
   new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
+ #staging = TesmartStaging.find( :all,:order => "clinicday ASC", :conditions =>["arv_no = ?", patient.id])
 #from patiet table in TESMART
-  new_staging.cd4_count = t_patient.initCD4Count
-  new_staging.date_of_cd4_count = t_patient.initCD4Date #check!!!
+#  new_staging.cd4_count = t_patient.initCD4Count
+ # new_staging.date_of_cd4_count = t_patient.initCD4Date #check!!!
 
 #from Stage table in TESMART
 #Stage 1 conditions
-  new_staging.patient_pregnant = t_stage.a3
-  new_staging.patient_breast_feeding = t_stage.a4
-  new_staging.asymptomatic = t_stage.a1
-  new_staging.persistent_generalized_lymphadenopathy = t_stage.a2
+  new_staging.patient_pregnant = staging.a3
+  new_staging.patient_breast_feeding = staging.a4
+  new_staging.asymptomatic = staging.a1
+  new_staging.persistent_generalized_lymphadenopathy = staging.a2
  # new_staging.unspecified_stage_1_cond = Null
 
 #stage 2 conditions
-  new_staging.molluscum_contagiosum = t_stage.b54
-  new_staging.wart_virus_infection_extensive = t_stage.b53
-  new_staging.oral_ulcerations_recurrent = t_stage.b55
-  new_staging.parotid_enlargement_persistent_unexplained = t_stage.b56
-  new_staging.lineal_gingival_erythema = t_stage.b57
-  new_staging.herpes_zoster = t_stage.b5867
-  new_staging.respiratory_tract_infection_recurrent = t_stage.b5968
-<<<<<<< HEAD
-=======
+  new_staging.molluscumm_contagiosum = staging.b54
+  new_staging.wart_virus_infection_extensive = staging.b53
+  new_staging.oral_ulcerations_recurrent = staging.b55
+  new_staging.parotid_enlargement_persistent_unexplained = staging.b56
+  new_staging.lineal_gingival_erythema = staging.b57
+  new_staging.herpes_zoster = staging.b5867
+  new_staging.respiratory_tract_infections_recurrent = staging.b5968
   #new_staging.unspecified_stage2_condition= Null
->>>>>>> 936d5672540f34edff28fceec8fdda0dd46182a1
-  new_staging.angular_chelitis = t_stage.b2
-  new_staging.papular_prutic_eruptions = t_stage.b6169
-  new_staging.hepatosplenomegaly_unexplained = t_stage.b51
+
+  new_staging.angular_chelitis = staging.b2
+  new_staging.papular_prurtic_eruptions = staging.b6169
+  new_staging.hepatosplenomegaly_unexplained = staging.b51
   
-  if !b1.blank?
-  new_staging.unspecified_stage2_condition = t_stage.c100
+#  if !b1.blank?
+ # new_staging.unspecified_stage2_condition = staging.c100
   #new_staging.unspecified_stage2_condition = Null
 
 #stage 3 conditions
-  new_staging.oral_hairy_leukoplakia =t_stage.c2
-  new_staging.severe_weight_loss = t_stage.c3
-  new_staging.fever_persistent_unexplained = t_stage.c5
-  new_staging.pulmonary_tubercuosis = t_stage.c6
-  new_staging.pulmonary_tuberculosis_last_2_years = t_stage.c7
-  new_staging.severe_bacterial_infection = t_stage.c8
-  new_staging.bacterial_pnuemonia = t_stage.c53
-  new_staging.symptomatic_lymphoid_interstitial_pnuemonitis = t_stage.c54
-  new_staging.chronic_hiv_assoc_lung_disease = t_stage.c55
-  new_staging.aneamia = t_stage.c10_1
-  new_staging.neutropaenia = t_stage.c10_2
-  new_staging.thrombocytopaenia_chronic = t_stage.c10_3
-  new_staging.diarhoea = t_stage.c4
-  new_staging.oral_candidiasis = t_stage.c1
-  new_staging.acute_necrotizing_ulcerative_gingivitis = t_stage.c9
-  new_staging.lymph_node_tuberculosis = t_stage.c52
+  new_staging.oral_hairy_leukoplakia =staging.c2
+  new_staging.severe_weight_loss = staging.c3
+  new_staging.fever_persistent_unexplained = staging.c5
+  new_staging.extrapulmonary_tuberculosis= staging.c6
+  new_staging.pulmonary_tuberculosis_last_2_years = staging.c7
+  new_staging.severe_bacterial_infection = staging.c8
+  new_staging.bacterial_pnuemonia = staging.c53
+  new_staging.symptomatic_lymphoid_interstitial_pnuemonitis = staging.c54
+  new_staging.chronic_hiv_assoc_lung_disease = staging.c55
+  new_staging.aneamia = staging.c10_1
+  new_staging.neutropaenia = staging.c10_2
+  new_staging.thrombocytopaenia_chronic = staging.c10_3
+  new_staging.diarhoea = staging.c4
+  new_staging.oral_candidiasis = staging.c1
+  new_staging.acute_necrotizing_ulcerative_gingivitis = staging.c9
+  new_staging.lymph_node_tuberculosis = staging.c52
 
-  if !c100.blank?
-  new_staging.unspecified_stage3_conditions = t_stage.c100
+#  if !c100.blank?
+#  new_staging.unspecified_stage3_conditions = staging.c100
  
   #new_staging.unspecified_stage3_conditions = Null
 
 #stage 4 conditions
-  new_staging.toxoplasmosis_of_brain = t_stage.d3
-  new_staging.cryptococcal_meningitis = t_stage.d6
-  new_staging.progressive_multifocal_leukoencephalopathy = t_stage,d9
-  new_staging.disseminated_mycosis = t_stage.d10
-  new_staging.candidiasis_of_oesophagus = t_stage.d11
-  new_staging.extrapulmonary_tuberculosis = t_stage.d14
-  new_staging.cerebral_non_hodgkin_lymphoma = t_stage.d15
-  new_staging.kaposis = t_stage.d16
-  new_staging.hiv_encephalopathy = t_stage.d17
-  new_staging.bacterial_infections_severe_recurrent = t_stage.d5
-  new_staging.pnuemocystis_pnuemonia = t_stage.d2
-  new_staging.disseminated_non_tuberculosis_mycobacterial_infection = t_stage.d12
-  new_staging.cryptosporidiosis = t_stage.d4
-  new_staging.isosporiasis = t_stage.d4_1
-  new_staging.symptomatic_hiv_associated_nephropathy = t_stage.dh1
-  new_staging.chronic_herpes_simplex_infection = t_stage.d8
-  new_staging.cutomegalovirus_infection = t_stage.d7
-  new_staging.toxoplasomis_of_the_brain_1month  = t_stage.d3
-  new_staging.recto_varginal_fistula = t_stage.dn2
-  new_staging.hiv_wasting_syndrome = t_stage.d1
-  #new_staging.unspecified_stage_4_condition = Null
-  new_staging.who_stage = t_stage.staging
-  new_staging.date_created  = t_stage.cdate
-  new_staging.old.enc_id = $encounter_id
-  new_staging.visit_encounter_id = create_visit_encounter(t_stage.clinicday, patient_id)
+  new_staging.toxoplasmosis_of_brain = staging.d3
+  new_staging.cryptococcal_meningitis = staging.d6
+  new_staging.progressive_multifocal_leukoencephalopathy = staging.d9
+  new_staging.disseminated_mycosis = staging.d10
+  new_staging.candidiasis_of_oesophagus = staging.d11
+  new_staging.extrapulmonary_tuberculosis = staging.d14
+  new_staging.cerebral_non_hodgkin_lymphoma = staging.d15
+  new_staging.kaposis = staging.d16
+  new_staging.hiv_encephalopathy = staging.d17
+  new_staging.bacterial_infections_severe_recurrent = staging.d5
+  new_staging.pnuemocystis_pnuemonia = staging.d2
+  new_staging.disseminated_non_tuberculosis_mycobactierial_infection = staging.d12
+  new_staging.cryptosporidiosis = staging.d4
+  new_staging.isosporiasis = staging.d4_1
+  new_staging.symptomatic_hiv_asscoiated_nephropathy = staging.dn1
+  new_staging.chronic_herpes_simplex_infection = staging.d8
+  new_staging.cytomegalovirus_infection = staging.d7
+  new_staging.toxoplasomis_of_the_brain_1month  = staging.d3
+  new_staging.recto_vaginal_fitsula = staging.dn2
+
+ # if !staging.d1.blank?
+  new_staging.hiv_wasting_syndrome = staging.d1
+
+
+  new_staging.who_stage = staging.staging
+  new_staging.old_enc_id = $encounter_id
+  new_staging.visit_encounter_id = create_visit_encounter(staging.clinicday, patient_id)
   new_staging.save
   $encounter_id +=1
-
 end
+#end
 
 def create_hiv_reception_encounter(patient,present,date_created, enc_date)
   new_recp_encounter = HivReceptionEncounter.new
