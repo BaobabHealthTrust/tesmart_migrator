@@ -2,36 +2,38 @@ $person_id = 2
 $encounter_id = 1
 $visit_encounter_hash = {}
 $hospital_id = 214
-$drug_code = {"TDF3TC"=>[734,"TDF/3TC (Tenofavir and Lamivudine 300/300mg tablet","IN THE EVENING",1,7928],
-             "CPT"=>[297,"Cotrimoxazole (480mg tablet)","TWICE A DAY (BD)", 1,916],
-             "CO"=>[297,"Cotrimoxazole (480mg tablet)","TWICE A DAY (BD)", 1,916],
-             "CTX"=>[576,"Cotrimoxazole (960mg)","IN THE EVENING (QPM)",1,916],
+$outcome_id = 1
+$site = TesmartHospital.first.h_name
+$drug_code = {"TDF3TC"=>[734,'Tenofovir Disoproxil Fumarate/Lamivudine 300mg/300',"IN THE EVENING",1,7928],
+             "CPT"=>[297,'Cotrimoxazole 480',"TWICE A DAY (BD)", 1,916],
+             "CO"=>[297,'Cotrimoxazole 480',"TWICE A DAY (BD)", 1,916],
+             "CTX"=>[576,'Cotrimoxazole 960',"IN THE EVENING (QPM)",1,916],
              "ATV/r_A"=>[817,"atr/A 100/200mg","IN THE EVENING (QPM)",1,8384],
-             "L3015_A"=>[738,"d4T/3TC (Stavudine Lamivudine 30/150 tablet)","ONCE A DAY (od)",1,2833],
-             "T3060_A"=>[613,"d4T/3TC/NVP (30/150/200mg tablet)","TWICE A DAY (BD)",1,792],
-             "AZT3TCN_A"=>[731,"AZT/3TC/NVP (300/150/200mg tablet)","TWICE A DAY (BD)",3,1610],
-             "AZT3TCN_P"=>[732,"AZT/3TC/NVP (60/30/50mg tablet)","TWICE A DAY (BD)",1,1610],
-             "TDF3TCEFV"=>[735,"TDF/3TC/EFV (300/300/600mg tablet)","IN THE EVENING (QPM)",1,2985],
-             "L3015_P"=>[72,"Triomune baby (d4T/3TC/NVP 6/30/50mg tablet)","TWICE A DAY(BD)",1,2985],
-             "AZT3TCN_P"=>[732,"AZT/3TC/NVP (60/30/50mg tablet)","TWICE A DAY (BD)",1,1610],
-             "ABC3TC"=>[733,"ABC/3TC (Abacavir and Lamivudine 60/30mg tablet)","TWICE A DAY (BD)",4,7927],
-             "AZT3TC_A"=>[731,"AZT/3TC/NVP (300/150/200mg tablet)","TWICE A DAY (BD)",1,1610],
-             "AZT3TC_P"=>[732,"AZT/3TC/NVP (60/30/50mg tablet)","TWICE A DAY (BD)",3,1610],
-             "LPVr_P"=>[74,"LPV/r (Lopinavir and Ritonavir 100/25mg tablet)","TWICE A DAY (BD)",2,794],
-             "LPVr_A"=>[73,"LPV/r (Lopinavir and Ritonavir 200/50mg tablet)","TWICE A DAY (BD)",2,794],
-             "L3060_P"=>[737,"d4T/3TC (Stavudine Lamivudine 6/30mg tablet)","TWICE A DAY (BD)",3,2833],
-             "L3060_A"=>[738,"d4T/3TC (Stavudine Lamivudine 30/150 tablet)","ONCE A DAY (od)",1,2833],
-             "T3060_P"=>[72,"Triomune baby (d4T/3TC/NVP 6/30/50mg tablet)","IN THE EVENING (QPM)",1,792],
-             "T3015_A"=>[613,"d4T/3TC/NVP (30/150/200mg tablet)","IN THE EVENING (QPM)",1,792],
-             "T3015_P"=>[737,"d4T/3TC/NVP (Stavudine Lamivudine 6/30mg/50mg tablet","IN THE EVENING (QPM)",1,2833],
-             "EFV_A"=>[11,"EFV (Efavirenz 600mg tablet)","TWICE A DAY (BD)",1,633],
-             "EFV_P"=>[30,"EFV (Efavirenz 200mg tablet)","TWICE A DAY (BD)",1,633],
-             "NVP"=>[22,"NVP (Nevirapine 200 mg tablet)","TWICE A DAY (BD)",1,631],
+             "L3015_A"=>[738,'Stavudine 30 Lamivudine 150',"ONCE A DAY (od)",1,2833],
+             "T3060_A"=>[613,'Stavudine 30 Lamivudine 150 Nevirapine 200',"TWICE A DAY (BD)",1,792],
+             "AZT3TCN_A"=>[731,'Zidovudine 300 Lamivudine 150 Nevirapine 200',"TWICE A DAY (BD)",3,1610],
+             "AZT3TCN_P"=>[732,'Zidovudine 60 Lamivudine 30 Nevirapine 50',"TWICE A DAY (BD)",1,1610],
+             "TDF3TCEFV"=>[735,'Tenofavir 300 Lamivudine 300 and Efavirenz 600',"IN THE EVENING (QPM)",1,2985],
+             "L3015_P"=>[72,'Stavudine 6 Lamivudine 30 Nevirapine 50',"TWICE A DAY(BD)",1,2985],
+             "AZT3TCN_P"=>[732,'Zidovudine 60 Lamivudine 30 Nevirapine 50',"TWICE A DAY (BD)",1,1610],
+             "ABC3TC"=>[733,'Abacavir 60 and Lamivudine 30',"TWICE A DAY (BD)",4,7927],
+             "AZT3TC_A"=>[731,"Zidovudine 300 Lamivudine 150 Nevirapine 200","TWICE A DAY (BD)",1,1610],
+             "AZT3TC_P"=>[732,"Zidovudine 60 Lamivudine 30 Nevirapine 50","TWICE A DAY (BD)",3,1610],
+             "LPVr_P"=>[74,"Lopinavir 100 Ritonavir 25","TWICE A DAY (BD)",2,794],
+             "LPVr_A"=>[73,"Lopinavir 200 Ritonavir 50","TWICE A DAY (BD)",2,794],
+             "L3060_P"=>[737,"Stavudine 6 Lamivudine 30","TWICE A DAY (BD)",3,2833],
+             "L3060_A"=>[738,"Stavudine 30 Lamivudine 150","ONCE A DAY (od)",1,2833],
+             "T3060_P"=>[72,"Stavudine Lamivudine Nevirapine (Triomune Baby)","IN THE EVENING (QPM)",1,792],
+             "T3015_A"=>[613,"Stavudine 30 Lamivudine 150 Nevirapine 200","IN THE EVENING (QPM)",1,792],
+             "T3015_P"=>[737,"Stavudine 6 Lamivudine 30 Nevirapine 50","IN THE EVENING (QPM)",1,2833],
+             "EFV_A"=>[11,"Efavirenz 600","TWICE A DAY (BD)",1,633],
+             "EFV_P"=>[30,"Efavirenz 200","TWICE A DAY (BD)",1,633],
+             "NVP"=>[22,"Nevirapine 200","TWICE A DAY (BD)",1,631],
              "IPT"=>[24,"INH or H (Isoniazid 100mg tablet)","IN THE EVENING (QPM)",1,656] }
 
 
 def start
-  patients = TesmartPatient.all.first(5)
+  patients = TesmartPatient.all.first(15)
   count = patients.length
 
   traditional_authorities =  TesmartLookup.load_traditional_authority
@@ -68,9 +70,9 @@ def start
       staging = TesmartStaging.find(:last,:order => "clinicday ASC",
                                     :conditions =>["arv_no = ?", patient.id])
 
-#      create_hiv_staging_encounter(staging,patient,patient_id)
+      create_hiv_staging_encounter(patient,staging,patient_id) unless staging.blank?
       create_first_visit_encounter(patient,patient_id)
- #     process_patient_records(patient, patient_id)
+      process_patient_records(patient, patient_id)
     end
     count -= 1
 
@@ -164,20 +166,18 @@ def process_patient_records(patient, patient_id)
   bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
     height = get_patient_height(record)
-    create_outcome(record,patient_id)
-    create_outcome_encounter(record, patient_id,record.cdate)
+    create_outcome_encounter(record,patient_id)
+    create_outcome(record, patient_id,record.cdate)
     create_art_visit(record,patient,bart_patient)
     create_give_drugs_encounter(record.ClinicDay, patient, patient_id,record.pillrunoutdate)
     create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
-
-
   end
 
   end
 
 
-def create_outcome(t_rec,patient_id)
+def create_outcome_encounter(t_rec,patient_id)
   #by justin
 
      outcome = OutcomeEncounter.new
@@ -189,7 +189,7 @@ def create_outcome(t_rec,patient_id)
      if !(t_rec.TransferOutTo.blank?)
      outcome.transferred_out_location = get_location(t_rec.TransferOutTo)
      end
-     outcome.location = $hospital_id
+     outcome.location = $site
      outcome.voided = 0
      outcome.encounter_datetime = t_rec.ClinicDay
      outcome.date_created = t_rec.cdate
@@ -229,12 +229,16 @@ def create_first_visit_encounter(t_patient, patient_id)
 
   new_first_visit_enc.location_of_art_initiation = get_location(t_patient.FirstLineARVsite.blank? ? $hospital_id : t_patient.FirstLineARVsite)
 	new_first_visit_enc.weight = t_patient.Weight
-	new_first_visit_enc.height = t_patient.Height
-	new_first_visit_enc.bmi = (t_patient.weight.to_f/(t_patient.height.to_f*t_patient.height.to_f)*10000) rescue nil
+  if (!t_patient.Height.blank? && t_patient.Height > 0)
+    new_first_visit_enc.height = t_patient.Height
+    bmi = (t_patient.Weight.to_f/(t_patient.Height.to_f*t_patient.Height.to_f)*10000) rescue nil
+    new_first_visit_enc.bmi = bmi.nan? ? nil : bmi
+  end
   new_first_visit_enc.patient_id = patient_id
   new_first_visit_enc.old_enc_id = $encounter_id
   new_first_visit_enc.visit_encounter_id = create_visit_encounter(t_patient.DateOfBegin,patient_id)
   new_first_visit_enc.voided = 0
+  new_first_visit_enc.location = $site
   new_first_visit_enc.date_created = t_patient.cdate
   new_first_visit_enc.encounter_datetime = t_patient.DateOfBegin
   new_first_visit_enc.creator = 1
@@ -243,7 +247,7 @@ def create_first_visit_encounter(t_patient, patient_id)
 end
 
 
-def create_hiv_staging_encounter( staging, patient_id)
+def create_hiv_staging_encounter(t_patient, staging, patient_id)
  #by temwa
   new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
@@ -253,47 +257,47 @@ def create_hiv_staging_encounter( staging, patient_id)
 
 #from Stage table in TESMART
 #Stage 1 conditions
-  new_staging.patient_pregnant = staging.a3
-  new_staging.patient_breast_feeding = staging.a4
-  new_staging.asymptomatic = staging.a1
-  new_staging.persistent_generalized_lymphadenopathy = staging.a2
+  new_staging.patient_pregnant = decode_staging_variable(staging.a3)
+  new_staging.patient_breast_feeding = decode_staging_variable(staging.a4)
+  new_staging.asymptomatic = decode_staging_variable(staging.a1)
+  new_staging.persistent_generalized_lymphadenopathy = decode_staging_variable(staging.a2)
  # new_staging.unspecified_stage_1_cond = Null
 
 #stage 2 conditions
-  new_staging.molluscumm_contagiosum = staging.b54
-  new_staging.wart_virus_infection_extensive = staging.b53
-  new_staging.oral_ulcerations_recurrent = staging.b55
-  new_staging.parotid_enlargement_persistent_unexplained = staging.b56
-  new_staging.lineal_gingival_erythema = staging.b57
-  new_staging.herpes_zoster = staging.b5867
-  new_staging.respiratory_tract_infections_recurrent = staging.b5968
+  new_staging.molluscumm_contagiosum = decode_staging_variable(staging.b54)
+  new_staging.wart_virus_infection_extensive = decode_staging_variable(staging.b53)
+  new_staging.oral_ulcerations_recurrent = decode_staging_variable(staging.b55)
+  new_staging.parotid_enlargement_persistent_unexplained = decode_staging_variable(staging.b56)
+  new_staging.lineal_gingival_erythema = decode_staging_variable(staging.b57)
+  new_staging.herpes_zoster = decode_staging_variable(staging.b5867)
+  new_staging.respiratory_tract_infections_recurrent = decode_staging_variable(staging.b5968)
   #new_staging.unspecified_stage2_condition= Null
 
-  new_staging.angular_chelitis = staging.b2
-  new_staging.papular_prurtic_eruptions = staging.b6169
-  new_staging.hepatosplenomegaly_unexplained = staging.b51
+  new_staging.angular_chelitis = decode_staging_variable(staging.b2)
+  new_staging.papular_prurtic_eruptions = decode_staging_variable(staging.b6169)
+  new_staging.hepatosplenomegaly_unexplained = decode_staging_variable(staging.b51)
   
 #  if !b1.blank?
  # new_staging.unspecified_stage2_condition = staging.c100
   #new_staging.unspecified_stage2_condition = Null
 
 #stage 3 conditions
-  new_staging.oral_hairy_leukoplakia =staging.c2
-  new_staging.severe_weight_loss = staging.c3
-  new_staging.fever_persistent_unexplained = staging.c5
-  new_staging.extrapulmonary_tuberculosis= staging.c6
-  new_staging.pulmonary_tuberculosis_last_2_years = staging.c7
-  new_staging.severe_bacterial_infection = staging.c8
-  new_staging.bacterial_pnuemonia = staging.c53
-  new_staging.symptomatic_lymphoid_interstitial_pnuemonitis = staging.c54
-  new_staging.chronic_hiv_assoc_lung_disease = staging.c55
-  new_staging.aneamia = staging.c10_1
-  new_staging.neutropaenia = staging.c10_2
-  new_staging.thrombocytopaenia_chronic = staging.c10_3
-  new_staging.diarhoea = staging.c4
-  new_staging.oral_candidiasis = staging.c1
-  new_staging.acute_necrotizing_ulcerative_gingivitis = staging.c9
-  new_staging.lymph_node_tuberculosis = staging.c52
+  new_staging.oral_hairy_leukoplakia = decode_staging_variable(staging.c2)
+  new_staging.severe_weight_loss = decode_staging_variable(staging.c3)
+  new_staging.fever_persistent_unexplained = decode_staging_variable(staging.c5)
+  new_staging.extrapulmonary_tuberculosis= decode_staging_variable(staging.c6)
+  new_staging.pulmonary_tuberculosis_last_2_years = decode_staging_variable(staging.c7)
+  new_staging.severe_bacterial_infection = decode_staging_variable(staging.c8)
+  new_staging.bacterial_pnuemonia = decode_staging_variable(staging.c53)
+  new_staging.symptomatic_lymphoid_interstitial_pnuemonitis = decode_staging_variable(staging.c54)
+  new_staging.chronic_hiv_assoc_lung_disease = decode_staging_variable(staging.c55)
+  new_staging.aneamia = decode_staging_variable(staging.c10_1)
+  new_staging.neutropaenia = decode_staging_variable(staging.c10_2)
+  new_staging.thrombocytopaenia_chronic = decode_staging_variable(staging.c10_3)
+  new_staging.diarhoea = decode_staging_variable(staging.c4)
+  new_staging.oral_candidiasis = decode_staging_variable(staging.c1)
+  new_staging.acute_necrotizing_ulcerative_gingivitis = decode_staging_variable(staging.c9)
+  new_staging.lymph_node_tuberculosis = decode_staging_variable(staging.c52)
 
 #  if !c100.blank?
 #  new_staging.unspecified_stage3_conditions = staging.c100
@@ -301,32 +305,37 @@ def create_hiv_staging_encounter( staging, patient_id)
   #new_staging.unspecified_stage3_conditions = Null
 
 #stage 4 conditions
-  new_staging.toxoplasmosis_of_brain = staging.d3
-  new_staging.cryptococcal_meningitis = staging.d6
-  new_staging.progressive_multifocal_leukoencephalopathy = staging.d9
-  new_staging.disseminated_mycosis = staging.d10
-  new_staging.candidiasis_of_oesophagus = staging.d11
-  new_staging.extrapulmonary_tuberculosis = staging.d14
-  new_staging.cerebral_non_hodgkin_lymphoma = staging.d15
-  new_staging.kaposis = staging.d16
-  new_staging.hiv_encephalopathy = staging.d17
-  new_staging.bacterial_infections_severe_recurrent = staging.d5
-  new_staging.pnuemocystis_pnuemonia = staging.d2
-  new_staging.disseminated_non_tuberculosis_mycobactierial_infection = staging.d12
-  new_staging.cryptosporidiosis = staging.d4
-  new_staging.isosporiasis = staging.d4_1
-  new_staging.symptomatic_hiv_asscoiated_nephropathy = staging.dn1
-  new_staging.chronic_herpes_simplex_infection = staging.d8
-  new_staging.cytomegalovirus_infection = staging.d7
-  new_staging.toxoplasomis_of_the_brain_1month  = staging.d3
-  new_staging.recto_vaginal_fitsula = staging.dn2
+  new_staging.toxoplasmosis_of_brain = decode_staging_variable(staging.d3)
+  new_staging.cryptococcal_meningitis = decode_staging_variable(staging.d6)
+  new_staging.progressive_multifocal_leukoencephalopathy = decode_staging_variable(staging.d9)
+  new_staging.disseminated_mycosis = decode_staging_variable(staging.d10)
+  new_staging.candidiasis_of_oesophagus = decode_staging_variable(staging.d11)
+  new_staging.extrapulmonary_tuberculosis = decode_staging_variable(staging.d14)
+  new_staging.cerebral_non_hodgkin_lymphoma = decode_staging_variable(staging.d15)
+  new_staging.kaposis = decode_staging_variable(staging.d16)
+  new_staging.hiv_encephalopathy = decode_staging_variable(staging.d17)
+  new_staging.bacterial_infections_severe_recurrent = decode_staging_variable(staging.d5)
+  new_staging.pnuemocystis_pnuemonia = decode_staging_variable(staging.d2)
+  new_staging.disseminated_non_tuberculosis_mycobactierial_infection = decode_staging_variable(staging.d12)
+  new_staging.cryptosporidiosis = decode_staging_variable(staging.d4)
+  new_staging.isosporiasis = decode_staging_variable(staging.d4_1)
+  new_staging.symptomatic_hiv_asscoiated_nephropathy = decode_staging_variable(staging.dn1)
+  new_staging.chronic_herpes_simplex_infection = decode_staging_variable(staging.d8)
+  new_staging.cytomegalovirus_infection = decode_staging_variable(staging.d7)
+  new_staging.toxoplasomis_of_the_brain_1month  = decode_staging_variable(staging.d3)
+  new_staging.recto_vaginal_fitsula = decode_staging_variable(staging.dn2)
 
  # if !staging.d1.blank?
   new_staging.hiv_wasting_syndrome = staging.d1
 
 
-  new_staging.who_stage = staging.staging
+  new_staging.who_stage = code_stage(staging.staging)
   new_staging.old_enc_id = $encounter_id
+  new_staging.location = $site
+  new_staging.creator = 1
+  new_staging.voided = 0
+  new_staging.encounter_datetime = staging.clinicday
+  new_staging.date_created = staging.clinicday
   new_staging.visit_encounter_id = create_visit_encounter(staging.clinicday, patient_id)
   new_staging.save
   $encounter_id +=1
@@ -336,12 +345,12 @@ end
 def create_hiv_reception_encounter(patient,present,date_created, enc_date)
   new_recp_encounter = HivReceptionEncounter.new
 
-  if present = "B"
-    new_recp_encounter.guardian = patient.gaurdian.relative_id rescue nil
+  if present == "B"
+    new_recp_encounter.guardian = patient.guardian.relative_id rescue nil
     new_recp_encounter.guardian_present = "Yes"
     new_recp_encounter.patient_present = "Yes"
-  elsif present = "G"
-    new_recp_encounter.guardian = patient.gaurdian.relative_id rescue nil
+  elsif present == "G"
+    new_recp_encounter.guardian = patient.guardian.relative_id rescue nil
     new_recp_encounter.guardian_present = "Yes"
   else
     new_recp_encounter.patient_present = "Yes"
@@ -352,6 +361,7 @@ def create_hiv_reception_encounter(patient,present,date_created, enc_date)
   new_recp_encounter.creator = 1
   new_recp_encounter.encounter_datetime = enc_date
   new_recp_encounter.date_created = date_created
+  new_recp_encounter.location = $site
   new_recp_encounter.voided = 0
   new_recp_encounter.save
 
@@ -363,16 +373,17 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
   new_vitals_enc = VitalsEncounter.new
   new_vitals_enc.patient_id = patient_id
   new_vitals_enc.weight = weight
-  unless height == 0
+  unless ((height == 0) || (height.blank?))
     new_vitals_enc.height = height
     new_vitals_enc.bmi = (weight.to_f/(height.to_f*height.to_f)*10000) rescue nil
   end
-  new_vitals_enc.visit_encounter_id = create_visit_encounter(clinic_day, patient_id)
+  new_vitals_enc.visit_encounter_id = create_visit_encounter(enc_date, patient_id)
   new_vitals_enc.old_enc_id = $encounter_id
   new_vitals_enc.voided = 0
   new_vitals_enc.date_created = cdate
   new_vitals_enc.encounter_datetime = enc_date
   new_vitals_enc.creator = 1
+  new_vitals_enc.location = $site
   new_vitals_enc.save
   $encounter_id += 1
 
@@ -425,14 +436,14 @@ def create_give_drugs_encounter(clinic_day, t_patient, patient_id,appointment_da
             new_give_drug_enc.dispensed_quantity5 = drug_disp.qty
         end
       drug_no += 1
-      $encounter_id += 1
     end
 
     new_give_drug_enc.patient_id = patient_id
-     new_give_drug_enc.appointment_date = appointment_date unless appointment_date.blank? 
+    new_give_drug_enc.appointment_date = appointment_date unless appointment_date.blank?
     new_give_drug_enc.old_enc_id = $encounter_id
     new_give_drug_enc.visit_encounter_id = create_visit_encounter(clinic_day, patient_id)
     new_give_drug_enc.voided = 0
+    new_give_drug_enc.location = $site
     new_give_drug_enc.date_created = dispensation_records.first.cdate
     new_give_drug_enc.encounter_datetime = clinic_day
     new_give_drug_enc.creator = 1
@@ -443,15 +454,16 @@ def create_give_drugs_encounter(clinic_day, t_patient, patient_id,appointment_da
 
 end
 
-def create_outcome_encounter(t_rec, patient_id,enc_date)
+def create_outcome(t_rec, patient_id,enc_date)
   #by justin
-  create_outcome_enc = PatientOutcome.new
-  create_outcome_enc.outcome_id = create_visit_encounter(t_rec.ClinicDay, patient_id)
-  create_outcome_enc.visit_encounter_id =  create_visit_encounter(t_rec.ClinicDay, patient_id)
-  create_outcome_enc.patient_id = patient_id
-  create_outcome_enc.outcome_state = get_status(t_rec.OutcomeStatus)
-  create_outcome_enc.outcome_date = t_rec.ClinicDay
-  create_outcome_enc.save
+  new_outcome = PatientOutcome.new
+  new_outcome.outcome_id = $outcome_id
+  new_outcome.visit_encounter_id =  create_visit_encounter(t_rec.ClinicDay, patient_id)
+  new_outcome.patient_id = patient_id
+  new_outcome.outcome_state = get_status(t_rec.OutcomeStatus)
+  new_outcome.outcome_date = t_rec.ClinicDay
+  new_outcome.save
+  $outcome_id += 1
 end
 
 def create_art_visit(record,patient,bart_patient)
@@ -461,7 +473,7 @@ def create_art_visit(record,patient,bart_patient)
   new_art_visit.visit_encounter_id = create_visit_encounter(record.ClinicDay,bart_patient.id)
   new_art_visit.old_enc_id = $encounter_id
   new_art_visit.patient_id = bart_patient.patient_id
-  new_art_visit.patient_pregnant = "Yes" if (record.pregnacy == "Y")
+  new_art_visit.patient_pregnant = "Yes" if (record.pregnancy == "Y")
   new_art_visit.using_family_planning_method = "Yes" if (record.Depo == "Y" || record.Condom > 0)
   new_art_visit.family_planning_method_used = (record.Depo == "Y") ? "Depo Vera" : "Condom" if new_art_visit.using_family_planning_method == "Yes"
 
@@ -470,7 +482,6 @@ def create_art_visit(record,patient,bart_patient)
       new_art_visit.other_symptoms = "Yes"
     else
       new_art_visit.abdominal_pains = "Yes" if record.caseM_desc.upcase.match(/ABDOMINAL PAIN/i)
-      new_art_visit.anorexia = ""
       new_art_visit.cough = "Yes" if record.caseM_desc.upcase.match(/COUGH/i)
       new_art_visit.diarrhoea = "Yes" if record.caseM_desc.upcase.match(/DIARRHOEA/i)
       new_art_visit.fever = "Yes" if record.caseM_desc.upcase.match(/FEVER/i)
@@ -484,6 +495,7 @@ def create_art_visit(record,patient,bart_patient)
       new_art_visit.peripheral_neuropathy = ""
       new_art_visit.hepatitis = ""
       new_art_visit.anaemia = ""
+      new_art_visit.anorexia = ""
       new_art_visit.lactic_acidosis = ""
 =end
       new_art_visit.lipodystrophy = "Yes" if record.caseM_desc.upcase.match(/BODY SHAPE/i)
@@ -530,7 +542,7 @@ def create_art_visit(record,patient,bart_patient)
     end
   end
 
-  last_disp = get_last_dispensations(record.ClinicDay, record.id)
+  last_disp = get_last_dispensations(record.ClinicDay, record.arv_no)
   drug_no = 1
 
   (last_disp || []).each do |dispensation|
@@ -574,6 +586,7 @@ def create_art_visit(record,patient,bart_patient)
   new_art_visit.voided = 0
   new_art_visit.encounter_datetime = record.ClinicDay
   new_art_visit.date_created = record.cdate
+  new_art_visit.location = $site
   new_art_visit.creator = 1
   new_art_visit.save
   $encounter_id += 1
@@ -708,7 +721,7 @@ end
 def get_last_dispensations(clinic_date, patient_id)
 
   records = TesmartOpdTran.find_by_sql("SELECT e.* FROM opd_tran as e where e.arv_no = #{patient_id} AND
-              ClinicDay = (SELECT MAX(ClinicDay) from opd_tran where arv_no = #{patient_id} AND DATE(ClinicDay) < DATE(#{clinic_date}))")
+              ClinicDay = (SELECT MAX(ClinicDay) from opd_tran where arv_no = #{patient_id} AND DATE(ClinicDay) < DATE('#{clinic_date}'))")
 
   return records
 end
@@ -725,6 +738,37 @@ def get_tb_status(status)
       return "Confirmed TB NOT on treatment"
     else
       return "Unknown"
+  end
+end
+
+def decode_staging_variable(ans)
+
+  if !ans.blank?
+    case ans
+      when "Y"
+        return "Yes"
+      when "N"
+        return "No"
+    end
+
+  end
+
+  return nil
+end
+
+def code_stage(stage)
+
+  case stage
+    when "1"
+      return "WHO stage I"
+    when "2"
+      return "WHO stage II"
+    when "3"
+      return "WHO stage III"
+    when "4"
+      return "WHO stage IV"
+    when "P"
+      return "WHO stage I peds"
   end
 end
 start
