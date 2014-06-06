@@ -31,7 +31,7 @@ $drug_code = {"TDF3TC"=>[734,"TDF/3TC (Tenofavir and Lamivudine 300/300mg tablet
 
 
 def start
-  patients = TesmartPatient.all
+  patients = TesmartPatient.all.first(5)
   count = patients.length
 
   traditional_authorities =  TesmartLookup.load_traditional_authority
@@ -68,9 +68,9 @@ def start
       staging = TesmartStaging.find(:last,:order => "clinicday ASC",
                                     :conditions =>["arv_no = ?", patient.id])
 
-      #create_hiv_staging_encounter(staging,patient,patient_id)
-#      create_first_visit_encounter
-      process_patient_records(patient, patient_id)
+#      create_hiv_staging_encounter(staging,patient,patient_id)
+      create_first_visit_encounter(patient,patient_id)
+ #     process_patient_records(patient, patient_id)
     end
     count -= 1
 
@@ -161,16 +161,15 @@ def process_patient_records(patient, patient_id)
   $outcome_encounter = 1
   $p_outcome_id = 1
   visit_records = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? ", patient.id] )
-  #bart_patient = Patient.find(patient_id)
+  bart_patient = Patient.find(patient_id)
   (visit_records || []).each do |record|
-    #height = get_patient_height(record)
+    height = get_patient_height(record)
     create_outcome(record,patient_id)
     create_outcome_encounter(record, patient_id,record.cdate)
-    #create_art_visit(record,patient,bart_patient)
+    create_art_visit(record,patient,bart_patient)
     create_give_drugs_encounter(record.ClinicDay, patient, patient_id,record.pillrunoutdate)
-
-    #create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
-    #create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
+    create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
+    create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
 
 
@@ -201,11 +200,11 @@ end
 def create_first_visit_encounter(t_patient, patient_id)
 
   new_first_visit_enc = FirstVisitEncounter.new
-  new_first_visit_enc.agrees_to_follow_up = get_followup_status(t_patient, record)
+  new_first_visit_enc.agrees_to_follow_up = get_followup_status(t_patient, t_patient.DateOfBegin)
   new_first_visit_enc.date_of_hiv_pos_test = t_patient.HIV_Positive_Date
   new_first_visit_enc.date_of_art_initiation = t_patient.FirstLineARV
 
-  if record.HIV_Positive_Place.blank?
+  if t_patient.HIV_Positive_Place.blank?
     new_first_visit_enc.location_of_hiv_pos_test = t_patient.HIV_Positive_Place_text.blank? ? "Unknown" : t_patient.HIV_Positive_Place_text
   else
     new_first_visit_enc.location_of_hiv_pos_test = TesmartLookup.find_by_item_code(t_patient.HIV_Positive_Place).code_desc rescue "Unknown"
@@ -234,7 +233,7 @@ def create_first_visit_encounter(t_patient, patient_id)
   new_first_visit_enc.old_enc_id = $encounter_id
   new_first_visit_enc.visit_encounter_id = create_visit_encounter(t_patient.DateOfBegin,patient_id)
   new_first_visit_enc.voided = 0
-  new_first_visit_enc.date_created = cdate
+  new_first_visit_enc.date_created = t_patient.cdate
   new_first_visit_enc.encounter_datetime = t_patient.DateOfBegin
   new_first_visit_enc.creator = 1
   new_first_visit_enc.save
@@ -242,13 +241,13 @@ def create_first_visit_encounter(t_patient, patient_id)
 end
 
 def create_hiv_staging_encounter(t_stage, t_patient, patient_id)
-  sssssss#by temwa
+  #by temwa
   new_staging = HivStagingEncounter.new
   new_staging.patient_id = patient_id
   new_staging.patient_pregnant = t_stage.a3
   new_staging.patient_breast_feeding = t_stage.a4
-  new_staging.cd4_count = t_patient.initCD4Count
-  new_staging.date_of_cd4_count = t_patient.initCD4Date #check!!!
+  new_staging.cd4_count = t_patient.InitCD4count
+  new_staging.date_of_cd4_count = t_patient.InitCD4date #check!!!
   new_staging.asymptomatic = t_stage.a1
   new_staging.persistent_generalized_lymphadenopathy = t_stage.a2
  # new_staging.unspecified_stage_1_cond = Null
@@ -664,8 +663,8 @@ def create_visit_encounter(encounter_date, patient)
   end
 end
 
-def get_followup_status(t_patient, record)
-  case t.patient.Pursue
+def get_followup_status(t_patient, cdate)
+  case t_patient.Pursue
     when "Y"
       return "Yes"
 
@@ -673,7 +672,7 @@ def get_followup_status(t_patient, record)
       return "No"
 
     else
-      check = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? AND ClinicDay > ?", t_patient.id, record.ClinicDay])
+      check = TesmartOpdReg.find(:all, :conditions => ["arv_no = ? AND ClinicDay > ?", t_patient.id, cdate])
       if check.blank?
         return "No"
       else
