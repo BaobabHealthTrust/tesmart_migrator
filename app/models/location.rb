@@ -1,3 +1,3 @@
 class Location < ActiveRecord::Base
-	set_table_name  :site
+	set_table_name  :location
 end

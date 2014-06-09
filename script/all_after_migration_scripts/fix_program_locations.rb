@@ -2,17 +2,16 @@ Source_db = YAML.load(File.open(File.join(RAILS_ROOT, "config/database.yml"), "r
 
 CONN = ActiveRecord::Base.connection
 
-
 def update_locations
   current_location_id = Encounter.find_by_sql("SELECT property_value FROM #{Source_db}.global_property
                                                WHERE property = 'current_health_center_id'").map(&:property_value).first
 
-          ActiveRecord::Base.connection.execute <<EOF
+  ActiveRecord::Base.connection.execute <<EOF
 UPDATE #{Source_db}.patient_program
 SET location_id = #{current_location_id}
 EOF
 
-	fix_retired_drug
+  fix_retired_drug
 end
 
 def fix_retired_drug

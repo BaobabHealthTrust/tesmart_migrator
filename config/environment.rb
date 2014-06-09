@@ -48,6 +48,12 @@ TesmartOpdTran.establish_connection(tesmart)
 TesmartPatient.establish_connection(tesmart)
 TesmartSite.establish_connection(tesmart)
 TesmartStaging.establish_connection(tesmart)
-Location.establish_connection(tesmart)
 
-
+bart = YAML.load(File.open(File.join(RAILS_ROOT, "config/database.yml"), "r"))['bart2']
+Concept.establish_connection(bart)
+DrugOrder.establish_connection(bart)
+Encounter.establish_connection(bart)
+EncounterType.establish_connection(bart)
+Observation.establish_connection(bart)
+Order.establish_connection(bart)
+Location.establish_connection(bart)

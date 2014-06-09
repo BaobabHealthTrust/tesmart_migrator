@@ -169,7 +169,7 @@ def process_patient_records(patient, patient_id)
     create_outcome_encounter(record,patient_id)
     create_outcome(record, patient_id,record.cdate)
     create_art_visit(record,patient,bart_patient)
-    create_give_drugs_encounter(record.ClinicDay, patient, patient_id,record.pillrunoutdate)
+    create_give_drugs_encounter(record.ClinicDay, patient, patient_id,record.pillrunoutdate, record.OfThoseAlive)
     create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
     create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
   end
@@ -223,7 +223,7 @@ def create_first_visit_encounter(t_patient, patient_id)
     # new_first_visit_enc.taken_arvs_in_last_two_weeks = "" key variable not collected
     new_first_visit_enc.ever_registered_at_art = "Yes"
     new_first_visit_enc.ever_received_arv = "Yes"
-    new_first_visit_enc.last_arv_regimen = t_patient.Last_arvDrug
+    new_first_visit_enc.last_arv_regimen = t_patient.Last_arvDrug.blank? ? "Unknown" : t_patient.Last_arvDrug
     new_first_visit_enc.date_last_arv_taken =  t_patient.Last_arvDate unless (t_patient.Last_arvDate.blank? || t_patient.Last_arvDate.to_date == "1899-12-30".to_date)
   end
 
@@ -255,6 +255,7 @@ def create_hiv_staging_encounter(t_patient, staging, patient_id)
   new_staging.cd4_count = t_patient.InitCD4count
   new_staging.date_of_cd4_count = t_patient.InitCD4date #check!!!
 
+  age = t_patient.age rescue 0
 #from Stage table in TESMART
 #Stage 1 conditions
   new_staging.patient_pregnant = decode_staging_variable(staging.a3)
@@ -326,10 +327,10 @@ def create_hiv_staging_encounter(t_patient, staging, patient_id)
   new_staging.recto_vaginal_fitsula = decode_staging_variable(staging.dn2)
 
  # if !staging.d1.blank?
-  new_staging.hiv_wasting_syndrome = staging.d1
+  new_staging.hiv_wasting_syndrome = decode_staging_variable(staging.d1)
 
 
-  new_staging.who_stage = code_stage(staging.staging)
+  new_staging.who_stage = code_stage(staging.staging, age)
   new_staging.old_enc_id = $encounter_id
   new_staging.location = $site
   new_staging.creator = 1
@@ -389,7 +390,7 @@ def create_vitals_encounter(weight, height, patient_id, cdate, enc_date)
 
 end
 
-def create_give_drugs_encounter(clinic_day, t_patient, patient_id,appointment_date)
+def create_give_drugs_encounter(clinic_day, t_patient, patient_id,appointment_date, regimen)
   #by justin
   #tesmart to openmrs drug mapping
   dispensation_records = TesmartOpdTran.find(:all,
@@ -401,38 +402,38 @@ def create_give_drugs_encounter(clinic_day, t_patient, patient_id,appointment_da
         case drug_no
           when 1
             new_give_drug_enc.pres_drug_name1 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.pres_dosage1 = $drug_code[drug_disp.item_code][3]
-            new_give_drug_enc.pres_frequency1 = get_drug_frequency($drug_code[drug_disp.item_code][2])
+            new_give_drug_enc.pres_dosage1 = get_drug_frequency($drug_code[drug_disp.item_code][2],$drug_code[drug_disp.item_code][3])
+            new_give_drug_enc.pres_frequency1 = $drug_code[drug_disp.item_code][2]
             new_give_drug_enc.dispensed_drug_name1 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.dispensed_dosage1 = $drug_code[drug_disp.item_code][3]
+            new_give_drug_enc.dispensed_dosage1 = get_drug_frequency($drug_code[drug_disp.item_code][2],drug_disp.take_qty)
             new_give_drug_enc.dispensed_quantity1 = drug_disp.qty
           when 2
             new_give_drug_enc.pres_drug_name2 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.pres_dosage2 = $drug_code[drug_disp.item_code][3]
-            new_give_drug_enc.pres_frequency2 = get_drug_frequency($drug_code[drug_disp.item_code][2])
+            new_give_drug_enc.pres_dosage2 = get_drug_frequency($drug_code[drug_disp.item_code][2],$drug_code[drug_disp.item_code][3])
+            new_give_drug_enc.pres_frequency2 = $drug_code[drug_disp.item_code][2]
             new_give_drug_enc.dispensed_drug_name2 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.dispensed_dosage2 = $drug_code[drug_disp.item_code][3]
+            new_give_drug_enc.dispensed_dosage2 = get_drug_frequency($drug_code[drug_disp.item_code][2],drug_disp.take_qty)
             new_give_drug_enc.dispensed_quantity2 = drug_disp.qty
           when 3
             new_give_drug_enc.pres_drug_name3 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.pres_dosage3 = $drug_code[drug_disp.item_code][3]
-            new_give_drug_enc.pres_frequency3 = get_drug_frequency($drug_code[drug_disp.item_code][2])
+            new_give_drug_enc.pres_dosage3 = get_drug_frequency($drug_code[drug_disp.item_code][2],$drug_code[drug_disp.item_code][3])
+            new_give_drug_enc.pres_frequency3 = $drug_code[drug_disp.item_code][2]
             new_give_drug_enc.dispensed_drug_name3 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.dispensed_dosage3 = $drug_code[drug_disp.item_code][3]
+            new_give_drug_enc.dispensed_dosage3 = get_drug_frequency($drug_code[drug_disp.item_code][2],drug_disp.take_qty)
             new_give_drug_enc.dispensed_quantity3 = drug_disp.qty
           when 4
             new_give_drug_enc.pres_drug_name4 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.pres_dosage4 = $drug_code[drug_disp.item_code][3]
-            new_give_drug_enc.pres_frequency4 = get_drug_frequency($drug_code[drug_disp.item_code][2])
+            new_give_drug_enc.pres_dosage4 = get_drug_frequency($drug_code[drug_disp.item_code][2],drug_disp.take_qty)
+            new_give_drug_enc.pres_frequency4 = $drug_code[drug_disp.item_code][2]
             new_give_drug_enc.dispensed_drug_name4 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.dispensed_dosage4 =  $drug_code[drug_disp.item_code][3]
+            new_give_drug_enc.dispensed_dosage4 =  get_drug_frequency($drug_code[drug_disp.item_code][2],drug_disp.take_qty)
             new_give_drug_enc.dispensed_quantity4 = drug_disp.qty
           when 5
             new_give_drug_enc.pres_drug_name5 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.pres_dosage5 = $drug_code[drug_disp.item_code][3]
-            new_give_drug_enc.pres_frequency5 = get_drug_frequency($drug_code[drug_disp.item_code][2])
+            new_give_drug_enc.pres_dosage5 = get_drug_frequency($drug_code[drug_disp.item_code][2],$drug_code[drug_disp.item_code][3])
+            new_give_drug_enc.pres_frequency5 = $drug_code[drug_disp.item_code][2]
             new_give_drug_enc.dispensed_drug_name5 = $drug_code[drug_disp.item_code][1]
-            new_give_drug_enc.dispensed_dosage5 = drug_disp.take_qty
+            new_give_drug_enc.dispensed_dosage5 = get_drug_frequency($drug_code[drug_disp.item_code][2],drug_disp.take_qty)
             new_give_drug_enc.dispensed_quantity5 = drug_disp.qty
         end
       drug_no += 1
@@ -440,6 +441,7 @@ def create_give_drugs_encounter(clinic_day, t_patient, patient_id,appointment_da
 
     new_give_drug_enc.patient_id = patient_id
     new_give_drug_enc.appointment_date = appointment_date unless appointment_date.blank?
+    new_give_drug_enc.regimen_category = regimen
     new_give_drug_enc.old_enc_id = $encounter_id
     new_give_drug_enc.visit_encounter_id = create_visit_encounter(clinic_day, patient_id)
     new_give_drug_enc.voided = 0
@@ -654,15 +656,15 @@ def get_patient_height(record)
 
 end
 
-def get_drug_frequency(frequency)
+def get_drug_frequency(frequency, dose)
 	case frequency
 		when "TWICE A DAY (BD)"
-		times = 2 
+		times = "#{dose}-#{dose}"
 		when "IN THE EVENING (QPM)"
-		times = 1 
+		times = dose
 		when "ONCE A DAY (od)"
-		times = 1 
-       end 
+		times = dose
+  end
 	return times
 end	
 def get_status(patient_state)
@@ -756,17 +758,33 @@ def decode_staging_variable(ans)
   return nil
 end
 
-def code_stage(stage)
+def code_stage(stage, age)
 
   case stage
     when "1"
-      return "WHO stage I"
+      if age < 14
+        return "WHO stage I peds"
+      else
+        return "WHO stage I adult"
+      end
     when "2"
-      return "WHO stage II"
+      if age < 14
+        return "WHO stage II peds"
+      else
+        return "WHO stage II adult"
+      end
     when "3"
-      return "WHO stage III"
+      if age < 14
+        return "WHO stage III peds"
+      else
+        return "WHO stage III adult"
+      end
     when "4"
-      return "WHO stage IV"
+      if age < 14
+        return "WHO stage IV peds"
+      else
+        return "WHO stage IV adult"
+      end
     when "P"
       return "WHO stage I peds"
   end
