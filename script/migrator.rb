@@ -33,7 +33,7 @@ $drug_code = {"TDF3TC"=>[734,'Tenofovir Disoproxil Fumarate/Lamivudine 300mg/300
 
 
 def start
-  patients = TesmartPatient.all.first(15)
+  patients = TesmartPatient.all
   count = patients.length
 
   traditional_authorities =  TesmartLookup.load_traditional_authority
@@ -253,7 +253,7 @@ def create_hiv_staging_encounter(t_patient, staging, patient_id)
   new_staging.patient_id = patient_id
 
   new_staging.cd4_count = t_patient.InitCD4count
-  new_staging.date_of_cd4_count = t_patient.InitCD4date #check!!!
+  new_staging.date_of_cd4_count = t_patient.InitCD4date.blank? ? t_patient.DateOfBegin : t_patient.InitCD4date
 
   age = t_patient.age rescue 0
 #from Stage table in TESMART
@@ -328,7 +328,7 @@ def create_hiv_staging_encounter(t_patient, staging, patient_id)
 
  # if !staging.d1.blank?
   new_staging.hiv_wasting_syndrome = decode_staging_variable(staging.d1)
-
+  new_staging.reason_for_starting_art = get_reason_for_starting(new_staging, staging.staging,age,staging.clinicday )
 
   new_staging.who_stage = code_stage(staging.staging, age)
   new_staging.old_enc_id = $encounter_id
@@ -788,5 +788,63 @@ def code_stage(stage, age)
     when "P"
       return "WHO stage I peds"
   end
+end
+
+def get_reason_for_starting(staging_enc, who_stage, age, enc_date)
+
+  cd4_count = staging_enc.cd4_count
+  stage = who_stage
+  adult_or_peds = age < 14 ? "peds" : "adult"
+
+  age_in_months = age * 12
+
+  low_cd4_count_350 = false
+  cd4_count_less_than_750 = false
+  low_cd4_count_250 = false
+
+  unless cd4_count.blank?
+    if cd4_count <= 250 and (staging_enc.date_of_cd4_count < '2011-07-01'.to_date)
+      low_cd4_count_250 = true
+    elsif cd4_count <= 350 and (encounter.date_of_cd4_count >= '2011-07-01'.to_date)
+      low_cd4_count_350 = true
+    elsif cd4_count <= 750
+      cd4_count_less_than_750 = true
+    end
+
+  end
+
+  if stage == "3" || stage == "4"
+
+    return "WHO stage #{stage} #{adult_or_peds}"
+
+  elsif low_cd4_count_350 and enc_date  >= '2011-07-01'.to_date
+
+    return "CD4 count < 350"
+
+  elsif low_cd4_count_250
+
+    return "CD4 count < 250"
+
+  elsif new_staging.patient_pregnant = "Yes"
+    return "Patient Pregnant"
+  elsif new_staging.patient_breast_feeding = "Yes"
+    return "Breastfeeding"
+  elsif adult_or_peds == "peds"
+
+    if age_in_months >= 12 and age_in_months < 24
+      return "Child HIV positive"
+    elsif (age_in_months >= 24 and age_in_months < 56) and cd4_count_less_than_750
+      return "CD4 count < 750"
+    else
+      return "Unknown"
+    end
+
+  else
+
+    return "Unknown"
+
+  end
+
+
 end
 start
