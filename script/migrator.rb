@@ -1,4 +1,4 @@
-$person_id = 2
+$person_id = 8667
 $encounter_id = 1
 $visit_encounter_hash = {}
 $hospital_id = 214
@@ -33,7 +33,7 @@ $drug_code = {"TDF3TC"=>[734,'Tenofovir Disoproxil Fumarate/Lamivudine 300mg/300
 
 
 def start
-  patients = TesmartPatient.all
+  patients = TesmartPatient.find(:all, :conditions => ["patientid >= ?", 4333])
   count = patients.length
 
   traditional_authorities =  TesmartLookup.load_traditional_authority
@@ -111,7 +111,7 @@ def create_patient(t_patient)
   new_patient.art_number = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
   new_patient.voided = 0
   new_patient.creator = 1
-  new_patient.date_created = t_patient.cdate
+  new_patient.date_created = t_patient.cdate.blank? ? t_patient.mdate : t_patient.cdate 
   new_patient.home_phone_number = t_patient.HomePhone
   new_patient.dob_estimated = 0
   new_patient.landmark = t_patient.Address
@@ -126,7 +126,8 @@ def create_patient(t_patient)
 end
 
 def create_guardian(t_patient, patient_id)
-
+	
+  next if t_patient.GuardianName.blank?
   guardian_names = t_patient.GuardianName.split(" ")
   gender = get_relation_gender(t_patient.Sex, t_patient.guardianrelation)
   new_guardian_patient = Patient.new
@@ -137,7 +138,7 @@ def create_guardian(t_patient, patient_id)
   new_guardian_patient.dob = '0000-00-00'
   new_guardian_patient.voided = 0
   new_guardian_patient.creator = 1
-  new_guardian_patient.date_created = t_patient.cdate
+  new_guardian_patient.date_created = t_patient.cdate.blank? ? t_patient.mdate : t_patient.cdate
   new_guardian_patient.save
   $person_id +=1
 
@@ -150,7 +151,7 @@ def create_guardian(t_patient, patient_id)
   new_guardian.gender = gender
   new_guardian.creator = 1
   new_guardian.voided = 0
-  new_guardian.date_created = t_patient.cdate
+  new_guardian.date_created = t_patient.cdate.blank? ? t_patient.mdate : t_patient.cdate
   new_guardian.save
 
   patient = Patient.find(patient_id)
@@ -239,7 +240,7 @@ def create_first_visit_encounter(t_patient, patient_id)
   new_first_visit_enc.visit_encounter_id = create_visit_encounter(t_patient.DateOfBegin,patient_id)
   new_first_visit_enc.voided = 0
   new_first_visit_enc.location = $site
-  new_first_visit_enc.date_created = t_patient.cdate
+  new_first_visit_enc.date_created = t_patient.cdate.blank? ? t_patient.mdate : t_patient.cdate
   new_first_visit_enc.encounter_datetime = t_patient.DateOfBegin
   new_first_visit_enc.creator = 1
   new_first_visit_enc.save
@@ -805,7 +806,7 @@ def get_reason_for_starting(staging_enc, who_stage, age, enc_date)
   unless cd4_count.blank?
     if cd4_count <= 250 and (staging_enc.date_of_cd4_count < '2011-07-01'.to_date)
       low_cd4_count_250 = true
-    elsif cd4_count <= 350 and (encounter.date_of_cd4_count >= '2011-07-01'.to_date)
+    elsif cd4_count <= 350 and (staging_enc.date_of_cd4_count >= '2011-07-01'.to_date)
       low_cd4_count_350 = true
     elsif cd4_count <= 750
       cd4_count_less_than_750 = true
@@ -825,9 +826,9 @@ def get_reason_for_starting(staging_enc, who_stage, age, enc_date)
 
     return "CD4 count < 250"
 
-  elsif new_staging.patient_pregnant = "Yes"
+  elsif staging_enc.patient_pregnant = "Yes"
     return "Patient Pregnant"
-  elsif new_staging.patient_breast_feeding = "Yes"
+  elsif staging_enc.patient_breast_feeding = "Yes"
     return "Breastfeeding"
   elsif adult_or_peds == "peds"
 
