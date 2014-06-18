@@ -33,7 +33,7 @@ $drug_code = {"TDF3TC"=>[734,'Tenofovir Disoproxil Fumarate/Lamivudine 300mg/300
 
 
 def start
-  patients = TesmartPatient.all
+  patients = TesmartPatient.find(:all, :order=>"arv_no",:limit=>300,:offset=>2000)
   count = patients.length
 
   traditional_authorities =  TesmartLookup.load_traditional_authority
@@ -111,7 +111,7 @@ def create_patient(t_patient)
   new_patient.art_number = "#{t_patient.h_code}" + "-" + "ARV" + "-" + "#{t_patient.arv_no}"
   new_patient.voided = 0
   new_patient.creator = 1
-  new_patient.date_created = t_patient.cdate
+  new_patient.date_created = t_patient.FirstLineARV
   new_patient.home_phone_number = t_patient.HomePhone
   new_patient.dob_estimated = 0
   new_patient.landmark = t_patient.Address
@@ -150,7 +150,7 @@ def create_guardian(t_patient, patient_id)
   new_guardian.gender = gender
   new_guardian.creator = 1
   new_guardian.voided = 0
-  new_guardian.date_created = t_patient.cdate
+  new_guardian.date_created = t_patient.FirstLineARV
   new_guardian.save
 
   patient = Patient.find(patient_id)
@@ -167,11 +167,11 @@ def process_patient_records(patient, patient_id)
   (visit_records || []).each do |record|
     height = get_patient_height(record)
     create_outcome_encounter(record,patient_id)
-    create_outcome(record, patient_id,record.cdate)
+    create_outcome(record, patient_id,record.ClinicDay)
     create_art_visit(record,patient,bart_patient)
     create_give_drugs_encounter(record.ClinicDay, patient, patient_id,record.pillrunoutdate, record.OfThoseAlive)
-    create_vitals_encounter(record.Weight,height, patient_id, record.cdate, record.ClinicDay)
-    create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.cdate, record.ClinicDay)
+    create_vitals_encounter(record.Weight,height, patient_id, record.ClinicDay, record.ClinicDay)
+    create_hiv_reception_encounter(bart_patient,record.ARVGiven,record.ClinicDay, record.ClinicDay)
   end
 
   end
@@ -192,7 +192,7 @@ def create_outcome_encounter(t_rec,patient_id)
      outcome.location = $site
      outcome.voided = 0
      outcome.encounter_datetime = t_rec.ClinicDay
-     outcome.date_created = t_rec.cdate
+     outcome.date_created = t_rec.ClinicDay
      outcome.creator = 1
      outcome.save
      $encounter_id += 1
@@ -239,7 +239,7 @@ def create_first_visit_encounter(t_patient, patient_id)
   new_first_visit_enc.visit_encounter_id = create_visit_encounter(t_patient.DateOfBegin,patient_id)
   new_first_visit_enc.voided = 0
   new_first_visit_enc.location = $site
-  new_first_visit_enc.date_created = t_patient.cdate
+  new_first_visit_enc.date_created = t_patient.FirstLineARV
   new_first_visit_enc.encounter_datetime = t_patient.DateOfBegin
   new_first_visit_enc.creator = 1
   new_first_visit_enc.save
@@ -803,9 +803,9 @@ def get_reason_for_starting(staging_enc, who_stage, age, enc_date)
   low_cd4_count_250 = false
 
   unless cd4_count.blank?
-    if cd4_count <= 250 and (staging_enc.date_of_cd4_count < '2011-07-01'.to_date)
+    if cd4_count <= 250 # and (staging_enc.date_of_cd4_count < '2011-07-01'.to_date)
       low_cd4_count_250 = true
-    elsif cd4_count <= 350 and (encounter.date_of_cd4_count >= '2011-07-01'.to_date)
+    elsif cd4_count <= 350 #and (staging_enc.date_of_cd4_count >= '2011-07-01'.to_date)
       low_cd4_count_350 = true
     elsif cd4_count <= 750
       cd4_count_less_than_750 = true
@@ -817,17 +817,17 @@ def get_reason_for_starting(staging_enc, who_stage, age, enc_date)
 
     return "WHO stage #{stage} #{adult_or_peds}"
 
-  elsif low_cd4_count_350 and enc_date  >= '2011-07-01'.to_date
+  elsif low_cd4_count_350 and stage.to_i < 3 #and enc_date  >= '2011-07-01'.to_date
 
     return "CD4 count < 350"
-
-  elsif low_cd4_count_250
+ 
+  elsif low_cd4_count_250 and stage.to_i < 3
 
     return "CD4 count < 250"
 
-  elsif new_staging.patient_pregnant = "Yes"
+  elsif staging_enc.patient_pregnant = "Yes"
     return "Patient Pregnant"
-  elsif new_staging.patient_breast_feeding = "Yes"
+  elsif staging_enc.patient_breast_feeding = "Yes"
     return "Breastfeeding"
   elsif adult_or_peds == "peds"
 
