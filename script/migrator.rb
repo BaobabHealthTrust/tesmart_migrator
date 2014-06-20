@@ -1,4 +1,4 @@
-$person_id = 8667
+$person_id = 2
 $encounter_id = 1
 $visit_encounter_hash = {}
 $hospital_id = 214
@@ -33,7 +33,7 @@ $drug_code = {"TDF3TC"=>[734,'Tenofovir Disoproxil Fumarate/Lamivudine 300mg/300
 
 
 def start
-  patients = TesmartPatient.find(:all)
+  patients = TesmartPatient.find(:all,:order=>'arv_no',:offset=>4000,:limit=>100)
 
   count = patients.length
 
