@@ -1,4 +1,5 @@
-$person_id = 2
+
+$person_id = Patient.find_by_sql("SELECT max(person_id) as count_id FROM kawale.person").first.count_id.to_i + 1 rescue 2
 $encounter_id = 1
 $visit_encounter_hash = {}
 $hospital_id = 214
@@ -30,7 +31,6 @@ $drug_code = {"TDF3TC"=>[734,'Tenofovir Disoproxil Fumarate/Lamivudine 300mg/300
              "EFV_P"=>[30,"Efavirenz 200","TWICE A DAY (BD)",1,633],
              "NVP"=>[22,"Nevirapine 200","TWICE A DAY (BD)",1,631],
              "IPT"=>[24,"INH or H (Isoniazid 100mg tablet)","IN THE EVENING (QPM)",1,656] }
-
 
 def start
   patients = TesmartPatient.find(:all,:order=>'arv_no',:offset=>4000,:limit=>100)
