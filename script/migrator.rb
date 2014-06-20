@@ -1,4 +1,4 @@
-$person_id = 8667
+$person_id = Patient.find_by_sql("SELECT max(person_id) as count_id FROM kawale.person").first.count_id.to_i + 1 rescue 2
 $encounter_id = 1
 $visit_encounter_hash = {}
 $hospital_id = 214
