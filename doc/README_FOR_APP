@@ -1,2 +1,65 @@
-Use this README file to introduce your application and point to useful places in the API for learning more.
-Run "rake doc:app" to generate API documentation for your models, controllers, helpers, and libraries.
+Tesmart Migrator Application
+
+Tesmart Migrator application is used to migrate data from Tesmart database to OpenMRS 1.7. database platform. The process of migrating data is divided into three main phases.
+
+These are:
+1. Export data from tesmart database into the intermediary storage (14 flat tables)
+2. Map and import data from the intermediary tables into OpenMRS version 1.7
+3. Run the after migration scripts.
+
+** Please note that the migration process requires enough hard disk space, depending on how large the dataset one is migrating. For example, 2.3 GB dataset (dump) may require approximately 15 GB of free Hard Disk Space. This is vital when importing data from intermediate tables into OpenMRS version 1.7. Refer to Phase two of the migration process. **
+
+Getting started 
+
+Steps on migrating data from tesmart to OpenMRS 1.7
+
+Phase One : Export to Intermediate Tables
+
+Tesmart Data Preparation
+
+1. Dump data from the sql server for TESTMART
+
+2. Convert dumped data from sql server version into mysql version
+
+3. Load mysql dumped data into a mysql database
+
+
+Setup of Intermediate Tables
+
+
+1. Make sure that you have an up-to-date tesmart_migrator application on your machine.
+
+2. Change database settings in config/database.yml of tesmart_migrator application to your specifications as below.
+
+	- Under tesmart: enter the details of your Source database (the dataset you want to export. This is the tesmart dataset)
+
+	- Under development or production: Use bart1_intermediate_bare_bones as the database name for this for consistency.
+
+	- Under bart2: enter the details of your destination database. (This is the OpenMRS version 1.7)
+
+3. Open the Console from tesmart_migrator and enter the command below to create intermediary storage 
+
+4. export data from tesmart into the intermediary storage
+
+5. After running the queries and you are sure that the data is as you expected, you are now ready to map and import data from the intermediary tables into OpenMRS version 1.7.
+
+
+Phase Two: Import of From Intermediate Tables to Destination Database
+
+With this method, all patients with their associated encounters and observations are mapped and imported from the first patient to the last patient. This method is adopted when the size of the dataset is small and also if there are limited resources.
+
+On tesmart_migrator terminal, type the following command to map and import data:
+
+		ruby full_procedure_setup.sh site_code
+
+Note: Site code in this case is the code for a particular site. Example is given below:
+
+		ruby full_procedure_setup.sh mpc
+
+Phase Three: Testing Migrated Data
+
+1. Change the NART 2 config/database.yml to point to the OpenMRS version 1.7. This is the database which has the migrated data.
+
+2. Test the data by sampling some patients and comparing their records with Tesmart. You could also run queries on the 3 databases to verify the data
+
+5. One can also test the data by running cohort report in both Tesmart and NART. 
